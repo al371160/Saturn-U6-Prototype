@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fbca916eda4a4064b471fd973a0417c, type: 3}
+  m_Name: lake shack sign
+  m_EditorClassIdentifier: 
+  lines:
+  - isPlayer: 1
+    speakerName: 
+    text: the shack mottled with lichen and condensation.
+    waitAfterLine: 1
+  - isPlayer: 1
+    speakerName: 
+    text: it's obviously been here for a while.
+    waitAfterLine: 1
+  - isPlayer: 1
+    speakerName: 
+    text: 'the door is tightly shut. '
+    waitAfterLine: 1
+  - isPlayer: 1
+    speakerName: 
+    text: I can't see inside, but there's no commotion.
+    waitAfterLine: 1
+  - isPlayer: 1
+    speakerName: 
+    text: 'a sign on the door says:'
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: Dan's
+    waitAfterLine: 1
+  - isPlayer: 1
+    speakerName: 
+    text: Maybe I can find him elsewhere.
+    waitAfterLine: 1
+  choices: []
+  requiredItemName: 
+  requiredItemCount: 1
+  checkOnly: 0
+  fallbackNode: {fileID: 0}

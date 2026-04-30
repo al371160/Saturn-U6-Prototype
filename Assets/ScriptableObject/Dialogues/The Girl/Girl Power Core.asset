@@ -1,0 +1,96 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fbca916eda4a4064b471fd973a0417c, type: 3}
+  m_Name: Girl Power Core
+  m_EditorClassIdentifier: 
+  lines:
+  - isPlayer: 0
+    speakerName: 
+    text: Ooh look!
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: It's a power core!
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: Useful.
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: 'I see them so much, '
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: but seeing it lying among nature,
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: How poignant
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: hmm
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: You know what?
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: I want to do one thing.
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: Could you...
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: Climb to the top of the tallest mountain
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: and see the sunset?
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: YEAH!
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: Please... it would mean the world to me.
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: OK, I'll do that.
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (Wow, this girl is quite peculiar)
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (I wonder if I can spot the station she's on)
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (I'm sure she's in low-earth orbit)
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (I gotta go there)
+    waitAfterLine: 0
+  choices: []
+  requiredItemName: 
+  requiredItemCount: 1
+  checkOnly: 0
+  fallbackNode: {fileID: 0}

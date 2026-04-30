@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fbca916eda4a4064b471fd973a0417c, type: 3}
+  m_Name: Girl 1 Sand 1
+  m_EditorClassIdentifier: 
+  lines:
+  - isPlayer: 1
+    speakerName: 
+    text: (haaaahhh...)
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (What a view.)
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: Feels nice for a change.
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: '*sob*'
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: '*sob*'
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: '!!!!'
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: I have dreamed of this place... *sob*
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: -- ever since- my last trip
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: "Now *sob* I\u2019m back in my dreams"
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: ...
+    waitAfterLine: 0
+  choices: []
+  requiredItemName: 
+  requiredItemCount: 1
+  checkOnly: 0
+  fallbackNode: {fileID: 0}

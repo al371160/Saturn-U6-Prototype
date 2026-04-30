@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fbca916eda4a4064b471fd973a0417c, type: 3}
+  m_Name: lydia dialogue 0 (sounds good)
+  m_EditorClassIdentifier: 
+  lines:
+  - isPlayer: 1
+    speakerName: 
+    text: Sounds good. Thanks, Chief Lydia.
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: That's right! OK, be seeing you with the money!
+    waitAfterLine: 0
+  choices: []
+  requiredItemName: 
+  requiredItemCount: 1
+  checkOnly: 0
+  fallbackNode: {fileID: 0}

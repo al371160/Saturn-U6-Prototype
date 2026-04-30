@@ -1,0 +1,132 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fbca916eda4a4064b471fd973a0417c, type: 3}
+  m_Name: Tutorial Sign
+  m_EditorClassIdentifier: 
+  lines:
+  - isPlayer: 1
+    speakerName: 
+    text: 'The sign reads:'
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: Welcome to Saturn Valley!
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: (the game is a work in progress)
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: So this is an intro
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: To all the things cool about it!
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: 'So, what you can do:'
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: hold space to glide
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: Swim, walk, sprint (shift) and double jump
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: also, CLIMB!
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: They're all dependent on your stamina
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: indicated by the power core icons on the left
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: on the top of the mountain is snowy
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: Your stamina doesn't come back!
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: but swimming in the water will
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: 'First, try to explore the edges of '
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: saturn isles
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: 'Then, when you''re ready, '
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: scale the mountain
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: If you have any questions
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: please let Alex know
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: he will be happy
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: 'this game:'
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: no sound
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: no plot
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: no quests
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: absolute cinema
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: have fun! :)
+    waitAfterLine: 1
+  - isPlayer: 1
+    speakerName: 
+    text: (... ok)
+    waitAfterLine: 1
+  choices: []
+  requiredItemName: 
+  requiredItemCount: 1
+  checkOnly: 0
+  fallbackNode: {fileID: 0}

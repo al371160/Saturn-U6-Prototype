@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fbca916eda4a4064b471fd973a0417c, type: 3}
+  m_Name: Girl 2 Creek Submerge
+  m_EditorClassIdentifier: 
+  lines:
+  - isPlayer: 0
+    speakerName: 
+    text: (I submerge myself)
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (The water is cool)
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (I know the ultra-high-frequency waves)
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (would reach her too)
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: Oooooooh....
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: Is it hot where you are?
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (Her spacesuit has an advanced AC system)
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (I remember that)
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: Yes.... Hot... Hot like....
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: LAVA...
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (huh)
+    waitAfterLine: 0
+  choices: []
+  requiredItemName: 
+  requiredItemCount: 1
+  checkOnly: 0
+  fallbackNode: {fileID: 0}

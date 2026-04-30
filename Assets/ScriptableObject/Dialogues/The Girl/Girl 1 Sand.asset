@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fbca916eda4a4064b471fd973a0417c, type: 3}
+  m_Name: Girl 1 Sand
+  m_EditorClassIdentifier: 
+  lines:
+  - isPlayer: 0
+    speakerName: 
+    text: Wooooooah
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: WOOOOOAOHHHH
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: huh?
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: This is... like PARADISE
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: Didn't you come here last time!
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: Yes! but
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: It's even MORE PARADISE-LIKE NOW!
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (this girl is funny)
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: Wow, the air feels so warm
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: yet the wind...
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: Is cooool....
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: It sure is
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: Let's go! Let's go explore!
+    waitAfterLine: 0
+  choices: []
+  requiredItemName: 
+  requiredItemCount: 1
+  checkOnly: 0
+  fallbackNode: {fileID: 0}

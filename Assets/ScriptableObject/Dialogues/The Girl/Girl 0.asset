@@ -1,0 +1,196 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fbca916eda4a4064b471fd973a0417c, type: 3}
+  m_Name: Girl 0
+  m_EditorClassIdentifier: 
+  lines:
+  - isPlayer: 0
+    speakerName: 
+    text: ...
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: ...
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (So this is the eye's recipient)
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: I'm really sorry for your inconvenience.
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: ...!
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (such a gentle voice!)
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (it seemed to float through space)
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (softening the crude steel around us)
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: Not at all,
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: I'm happy to have some company!
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: So where do you want to go?
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: '!!!'
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: Really? You haven't...
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: Decided where you're going to go next?
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (As I listened, I began to notice some things)
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (her hologram carried no input lag)
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (usually people in low-earth orbit)
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (can easily travel to earth, but...)
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (why would she want me to take her eyes)
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (when she can just go herself?)
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: ... Uhh.. What station are you in?
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: '!!'
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: '!!!!!'
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: ...Don't ask......Please.....
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: ......
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (huh?)
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (ok, I'll leave the topic)
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: OK then! Well, have you though of somewhere
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: To spend a few precious hours in?
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: precious.... hours....
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: (^0_0^)
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: ...
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: Haha, having trouble?
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: Oh, you have no idea!
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: It's like having three more days to live?
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: LOL, not three, only two
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: But fortunately, we can go anywhere within minutes
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: That's technology for you
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: ...Alright
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: 'Let''s go to '
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: Where I last landed
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: The ship has the coordinates.
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: OK, let's go!
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (I'm heading to the back of the ship)
+    waitAfterLine: 0
+  choices: []
+  requiredItemName: 
+  requiredItemCount: 1
+  checkOnly: 0
+  fallbackNode: {fileID: 0}

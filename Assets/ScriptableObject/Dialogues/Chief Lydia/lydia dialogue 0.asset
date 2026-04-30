@@ -1,0 +1,144 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fbca916eda4a4064b471fd973a0417c, type: 3}
+  m_Name: lydia dialogue 0
+  m_EditorClassIdentifier: 
+  lines:
+  - isPlayer: 1
+    speakerName: 
+    text: Are you Chief Lydia?
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: That would be me!
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: How's the re-rentry for you? Bumpy?
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: Well... A little
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: How did you know I came from up top?
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: Heh, how can I tell?
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: You fit into the landscape like
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: gum into a vending machine
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: ...!
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: Well, even if you look somewhat dashing
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: in your fancy high-tech company suit
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: with the latest trinkets and toys
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: But in here they don't mean much
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: Because this is Saturn Island!
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: Yeah, speaking of tech...
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: 'Do you happen to have '
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: some POWER CORES?
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: Oh, you found the right person to ask!
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: I got as much power cores here as you like!
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: A bunch of them fall out of the sky every month
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: so they might LAND AROUND THE ISLAND somewhere
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: But I can provide you with your power core needs
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: Oh, that's grea-
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: For a price, Mr. Grateful.
+    waitAfterLine: 0
+  - isPlayer: 1
+    speakerName: 
+    text: (aaaAAAhaAAAhh...)
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: Haha, I'll take it easy
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: seeing you are young and all
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: so the first power core
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: can be yours for 30 BITS!
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: How's that sound?
+    waitAfterLine: 0
+  choices:
+  - choiceText: Good deal.
+    nextNode: {fileID: 11400000, guid: 8579aaabc815f4e10a6cd10827dbc340, type: 2}
+  - choiceText: '[Attempt to bargain]'
+    nextNode: {fileID: 11400000, guid: 66294a3fc2a5a4e3ebded6fe0cb3f801, type: 2}
+  requiredItemName: 
+  requiredItemCount: 1
+  checkOnly: 0
+  fallbackNode: {fileID: 0}

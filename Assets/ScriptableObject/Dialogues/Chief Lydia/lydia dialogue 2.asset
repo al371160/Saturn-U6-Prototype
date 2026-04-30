@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fbca916eda4a4064b471fd973a0417c, type: 3}
+  m_Name: lydia dialogue 2
+  m_EditorClassIdentifier: 
+  lines:
+  - isPlayer: 1
+    speakerName: 
+    text: I have enough to buy another core
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: Ooh, nice job!
+    waitAfterLine: 0
+  - isPlayer: 0
+    speakerName: 
+    text: Here's your power core
+    waitAfterLine: 0
+  choices:
+  - choiceText: Confirm (Receive 1 Power Core)
+    nextNode: {fileID: 11400000, guid: 6be2fe31f1d9448878ba750350682368, type: 2}
+  requiredItemName: Bit
+  requiredItemCount: 30
+  checkOnly: 0
+  fallbackNode: {fileID: 11400000, guid: 2735771634f944c45aa0e768a5e10b7d, type: 2}

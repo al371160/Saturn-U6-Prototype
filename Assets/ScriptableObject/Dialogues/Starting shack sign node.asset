@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fbca916eda4a4064b471fd973a0417c, type: 3}
+  m_Name: Starting shack sign node
+  m_EditorClassIdentifier: 
+  lines:
+  - isPlayer: 1
+    speakerName: 
+    text: 'The sign reads:'
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: The Saturn Valley General Store is currently closed.
+    waitAfterLine: 1
+  - isPlayer: 0
+    speakerName: 
+    text: Please find Chief Lydia for any inquiries.
+    waitAfterLine: 1
+  - isPlayer: 1
+    speakerName: 
+    text: Huh, so I can't use the store.
+    waitAfterLine: 1
+  - isPlayer: 1
+    speakerName: 
+    text: Not like I can afford it anyway, I have NO COINS.
+    waitAfterLine: 1
+  - isPlayer: 1
+    speakerName: 
+    text: 'In order to TRAVERSE THE MAP FREELY, '
+    waitAfterLine: 1
+  - isPlayer: 1
+    speakerName: 
+    text: I'll need more POWER CORES.
+    waitAfterLine: 1
+  - isPlayer: 1
+    speakerName: 
+    text: I guess I'll follow the trail to see what's up.
+    waitAfterLine: 1
+  choices: []
+  requiredItemName: 
+  requiredItemCount: 1
+  checkOnly: 0
+  fallbackNode: {fileID: 0}

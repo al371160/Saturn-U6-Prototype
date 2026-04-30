@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fbca916eda4a4064b471fd973a0417c, type: 3}
+  m_Name: boss dialogue 2
+  m_EditorClassIdentifier: 
+  lines:
+  - isPlayer: 0
+    speakerName: 
+    text: this is another encounter, I hope
+    waitAfterLine: 1
+  - isPlayer: 1
+    speakerName: 
+    text: I don't want to see you again :(
+    waitAfterLine: 1
+  choices: []
+  requiredItemName: Power Core
+  requiredItemCount: 2
+  checkOnly: 1
+  fallbackNode: {fileID: 11400000, guid: b69545350f41a473f9a9d5b2997a7600, type: 2}
