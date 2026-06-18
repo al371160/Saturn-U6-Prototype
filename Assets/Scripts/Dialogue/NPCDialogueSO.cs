@@ -1,3 +1,26 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:f333f925374de8a44a519680c8c808ab4917345f8bd17c53ba3c55db425f74b3
-size 711
+/*using UnityEngine;
+using System.Collections.Generic;
+
+namespace RedstoneinventeGameStudio
+{
+    [CreateAssetMenu(menuName = "Dialogue/NPC Dialogue")]
+    public class NPCDialogueSO : ScriptableObject
+    {
+        public string title;
+        [TextArea(15, 20)]
+        public string lines;
+
+        public bool hasChoices;
+        public List<DialogueChoice> choices;
+        
+    }
+
+    [System.Serializable]
+    public class DialogueChoice
+    {
+        public string choiceText;
+        public int nextDialogueIndex; // index of the next dialogue in NPCManager.dialogues
+        public UnityEngine.Events.UnityEvent onChoose; // Optional: trigger events based on choice
+    }
+}
+*/

@@ -1,3 +1,21 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:61d3284e821237b8d6b780b3e9d050009af66a4675b0dfc24fae32d8ec97043c
-size 394
+using UnityEngine;
+
+public class UIManager : MonoBehaviour
+{
+    public GameObject[] objs;
+
+    // Update is called once per frame
+    void Update()
+    {
+        
+    }
+
+    public void ClearUI() 
+    {
+        for (int i=0; i < objs.Length; i++) {
+            GameObject obj = objs[i];
+            obj.SetActive(false);
+            Debug.Log(obj.name + "is now inactive.");
+        }
+    }
+}

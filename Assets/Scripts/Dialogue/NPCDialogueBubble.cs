@@ -1,3 +1,59 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:801b3f96b39039e130ba2d918427494e41b4c6732c4acfd0faba299cad5b58c0
-size 1378
+using System.Collections;
+using TMPro;
+using UnityEngine;
+
+public class NPCDialogueBubble : MonoBehaviour
+{
+    [Header("UI References")]
+    public GameObject bubblePanel;
+    public TMP_Text textLabel;
+
+    [Header("Typing Settings")]
+    public float typeSpeed = 0.03f;
+    private bool typing = false;
+    public bool IsTyping() => typing;
+
+    [Header("Typing Sound Settings")]
+    public AudioClip typingSound;
+    public AudioSource audioSource;
+    public int charactersPerSound = 2;
+
+    public void ShowLine(string line)
+    {
+        StopAllCoroutines();
+        bubblePanel.SetActive(true);
+        textLabel.text = "";
+        StartCoroutine(TypeText(line));
+    }
+
+    IEnumerator TypeText(string text)
+    {
+        typing = true;
+        textLabel.text = "";
+        int charCount = 0;
+
+        foreach (char c in text)
+        {
+            textLabel.text += c;
+            charCount++;
+
+            if (charactersPerSound > 0 &&
+                charCount % charactersPerSound == 0 &&
+                !char.IsWhiteSpace(c) &&
+                typingSound && audioSource)
+            {
+                audioSource.PlayOneShot(typingSound);
+            }
+
+            yield return new WaitForSeconds(typeSpeed);
+        }
+
+        typing = false;
+    }
+
+    public void HideBubble()
+    {
+        bubblePanel.SetActive(false);
+        textLabel.text = "";
+    }
+}

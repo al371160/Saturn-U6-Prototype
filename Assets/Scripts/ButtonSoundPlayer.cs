@@ -1,3 +1,23 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:bb19ce26b07061c5a050faf234ffd26584d23239360521080ea8490cf630355f
-size 696
+using UnityEngine;
+using UnityEngine.EventSystems;
+
+public class ButtonSoundPlayer : MonoBehaviour, IPointerEnterHandler, IPointerClickHandler
+{
+    public AudioSource audioSource;
+    public AudioClip hoverSound;
+    public AudioClip clickSound;
+
+    // Called when the pointer hovers over the button
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (audioSource != null && hoverSound != null)
+            audioSource.PlayOneShot(hoverSound);
+    }
+
+    // Called when the button is clicked
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (audioSource != null && clickSound != null)
+            audioSource.PlayOneShot(clickSound);
+    }
+}

@@ -1,3 +1,362 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:ad72d5362797a109880451b2fe3b0005da55359060ef1700f9605f03644cd1af
-size 10134
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class InventoryManager : MonoBehaviour
+{
+    public UIManager uiManager;
+    public GameObject inventoryMenu;
+    public bool menuActivated = false;
+    public ItemSlot[] itemSlot;
+    public ItemSO[] itemSOs;
+
+    public BubblePopAnimation bubblePop1;
+    public BubblePopAnimation bubblePop2;
+    public GaussianBlurController blurController;
+
+    public CanvasGroup darkBackground;
+
+    public PlayerController playerController;
+
+    [Header("Item Banner")]
+    public GameObject itemBanner;
+    public TMPro.TMP_Text bannerTitle;
+    public TMPro.TMP_Text bannerDescription;
+    public CanvasGroup itemBannerCanvasGroup;
+    public float bannerDisplayDuration = 4f; // Duration the banner stays visible
+    public BubblePopAnimation bannerPopAnimation;
+
+    [Header("Small Item Banner")]
+    public GameObject smallItemBanner; // Reference to a pre-existing small banner in the scene
+    public TMPro.TMP_Text smallBannerText;
+    public CanvasGroup smallBannerCanvasGroup;
+
+    private Coroutine backgroundFadeCoroutine;
+
+    public float smallBannerDisplayDuration = 2f;
+
+    private Coroutine smallBannerCoroutine;
+
+
+    [Header("Audio")]
+    public AudioClip openSound;
+    public AudioClip closeSound;
+    private AudioSource audioSource;
+
+    void Start()
+    {
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
+    }
+
+    void Update()
+    {
+        if (Input.GetButtonDown("Inventory"))
+        {
+            uiManager.ClearUI();
+            if (!menuActivated)
+            {
+                OpenInventory();
+            }
+            else
+            {
+                CloseInventory();
+            }
+        }
+    }
+
+    private void OpenInventory()
+    {
+        inventoryMenu.SetActive(true);
+        bubblePop1.PlayPop();
+        bubblePop2.PlayPop();
+        menuActivated = true;
+
+        // Slow down time if you want
+        // Time.timeScale = 0.2f;
+
+        if (openSound != null)
+        {
+            audioSource.PlayOneShot(openSound);
+        }
+
+        if (blurController != null)
+        {
+            blurController.EnableBlur();
+        }
+
+        if (darkBackground != null)
+        {
+            if (backgroundFadeCoroutine != null)
+                StopCoroutine(backgroundFadeCoroutine);
+
+            backgroundFadeCoroutine = StartCoroutine(FadeBackground(0f, 0.5f, 0.2f));
+        }
+
+    }
+
+    public void CloseInventory()
+    {
+        inventoryMenu.SetActive(false);
+        menuActivated = false;
+
+        if (closeSound != null)
+        {
+            audioSource.PlayOneShot(closeSound);
+        }
+
+        if (blurController != null)
+        {
+            blurController.DisableBlur();
+        }
+
+        if (darkBackground != null)
+        {
+            if (backgroundFadeCoroutine != null)
+                StopCoroutine(backgroundFadeCoroutine);
+
+            backgroundFadeCoroutine = StartCoroutine(FadeBackground(0.5f, 0f, 0.2f));
+        }
+
+        // Ensure banner is hidden when inventory closes
+        if (bannerCoroutine != null)
+        {
+            StopCoroutine(bannerCoroutine);
+            bannerCoroutine = null;
+        }
+        itemBanner.SetActive(false);
+        itemBannerCanvasGroup.alpha = 0f;
+        itemBanner.transform.localScale = Vector3.zero;
+    }
+
+
+    private IEnumerator FadeBackground(float startAlpha, float endAlpha, float duration)
+    {
+        float t = 0f;
+
+        while (t < 1f)
+        {
+            t += Time.unscaledDeltaTime / duration; // Unscaled so the fade ignores slow time
+            float alpha = Mathf.Lerp(startAlpha, endAlpha, t);
+            darkBackground.alpha = alpha;
+            yield return null;
+        }
+
+        darkBackground.alpha = endAlpha;
+    }
+
+    private Coroutine bannerCoroutine;
+
+    public void ShowItemBanner(string itemName, string itemDescription)
+    {
+        if (bannerCoroutine != null)
+        {
+            StopCoroutine(bannerCoroutine);
+        }
+
+        itemBanner.SetActive(true);
+        itemBannerCanvasGroup.alpha = 1f;
+        //itemBanner.transform.localScale = Vector3.one;
+
+        bannerTitle.text = $"'{itemName}'!";
+        bannerDescription.text = itemDescription;
+
+        if (bannerPopAnimation != null)
+        {
+            bannerPopAnimation.PlayPop(); // Play pop-in when banner appears
+        }
+
+        bannerCoroutine = StartCoroutine(FadeOutBannerWithPop(bannerDisplayDuration, 0.5f)); // 0.5s fade duration
+    }
+
+
+    private IEnumerator FadeOutBannerWithPop(float waitTime, float fadeDuration)
+    {
+        yield return new WaitForSeconds(waitTime);
+
+        float t = 0f;
+        Vector3 initialScale = itemBanner.transform.localScale;
+
+        while (t < fadeDuration)
+        {
+            float progress = t / fadeDuration;
+
+            // Shrink using the pop curve in reverse
+            float scaleX = bannerPopAnimation.popCurveX.Evaluate(1f - progress);
+            float scaleY = bannerPopAnimation.popCurveY.Evaluate(1f - progress);
+            itemBanner.transform.localScale = new Vector3(scaleX, scaleY, 1f);
+
+            // Fade out
+            itemBannerCanvasGroup.alpha = Mathf.Lerp(1f, 0f, progress);
+
+            t += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        // Ensure final state
+        itemBannerCanvasGroup.alpha = 0f;
+        itemBanner.transform.localScale = Vector3.zero;
+        itemBanner.SetActive(false);
+    }
+
+    public void ShowSmallItemBanner(string itemName, int quantityGained, int startQuantity)
+    {
+        if (smallBannerCoroutine != null)
+        {
+            StopCoroutine(smallBannerCoroutine);
+        }
+
+        smallItemBanner.SetActive(true);
+        smallBannerCanvasGroup.alpha = 1f;
+
+        // Start the counting coroutine
+        smallBannerCoroutine = StartCoroutine(AnimateItemCount(itemName, startQuantity, startQuantity + quantityGained, smallBannerDisplayDuration));
+    }
+
+    private IEnumerator AnimateItemCount(string itemName, int startQuantity, int targetQuantity, float displayTime)
+    {
+        float countDuration = 0.5f; // Time to count up
+        float t = 0f;
+
+        while (t < countDuration)
+        {
+            t += Time.unscaledDeltaTime;
+            float progress = Mathf.Clamp01(t / countDuration);
+            int currentCount = Mathf.RoundToInt(Mathf.Lerp(startQuantity, targetQuantity, progress));
+            smallBannerText.text = $"{itemName} {currentCount}";
+            yield return null;
+        }
+
+        // Ensure the final value is shown
+        smallBannerText.text = $"{itemName} {targetQuantity}";
+
+        // Wait before starting the fade out
+        yield return new WaitForSeconds(displayTime);
+
+        float fadeDuration = 0.5f;
+        t = 0f;
+
+        while (t < fadeDuration)
+        {
+            t += Time.unscaledDeltaTime;
+            smallBannerCanvasGroup.alpha = Mathf.Lerp(1f, 0f, t / fadeDuration);
+            yield return null;
+        }
+
+        smallItemBanner.SetActive(false);
+    }
+
+
+
+
+
+    public void UseItem(string itemName)
+    {
+        for (int i = 0; i < itemSOs.Length; i++)
+        {
+            if (itemSOs[i].itemName == itemName && itemSOs[i].usable == true)
+            {
+                itemSOs[i].UseItem();
+            }
+        }
+    }
+
+    public void EquipItem(string itemName)
+    {
+        for (int i = 0; i < itemSOs.Length; i++)
+        {
+            if (itemSOs[i].itemName == itemName && itemSOs[i].usable == false)
+            {
+                itemSOs[i].EquipItem();
+            }
+        }
+    }
+
+    public int AddItem(string itemName, int quantity, Sprite itemSprite, string itemDescription)
+    {
+        Debug.Log(itemName + " " + quantity + " " + itemSprite);
+        int remaining = quantity;
+
+        for (int i = 0; i < itemSlot.Length; i++)
+        {
+            if ((itemSlot[i].itemName == itemName && !itemSlot[i].isFull) || itemSlot[i].quantity == 0)
+            {
+                remaining = itemSlot[i].AddItem(itemName, remaining, itemSprite, itemDescription);
+
+                ItemSO item = GetItemSO(itemName);
+
+                if (item != null)
+                {
+                    // If item is important, play animation
+                    if (item.important)
+                    {
+                        playerController.PlayImportantItemAnimation();
+                        ShowItemBanner(itemName, itemDescription);
+                    }
+
+                    // Specific case for Power Core
+                    if (item.itemName == "Power Core" && item.usable == false)
+                    {
+                        item.UseItem();
+                    }
+                }
+
+                if (remaining <= 0)
+                {
+                    // Calculate total quantity BEFORE adding this batch
+                    int totalQuantityBefore = 0;
+                    foreach (var slot in itemSlot)
+                    {
+                        if (slot.itemName == itemName)
+                        {
+                            totalQuantityBefore += slot.quantity;
+                        }
+                    }
+
+                    // Show smooth counter banner
+                    ShowSmallItemBanner(itemName, quantity, totalQuantityBefore - quantity); // Start from BEFORE current batch
+
+                    return 0;
+                }
+
+            }
+        }
+
+        return remaining;
+    }
+
+
+    public bool HasItem(string itemName, int quantity)
+    {
+        foreach (var slot in itemSlot)
+        {
+            if (slot.itemName == itemName && slot.quantity >= quantity)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void DeselectAllSlots()
+    {
+        for (int i = 0; i < itemSlot.Length; i++)
+        {
+            itemSlot[i].Deselect();
+        }
+    }
+
+
+    public ItemSO GetItemSO(string itemName)
+    {
+        foreach (var item in itemSOs)
+        {
+            if (item.itemName == itemName)
+                return item;
+        }
+        return null;
+    }
+}

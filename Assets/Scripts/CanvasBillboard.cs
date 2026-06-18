@@ -1,3 +1,21 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:1e5e09686f34eec93c02931f7aecbabfd758c8e25a6d7eda040b8a41e90cfceb
-size 367
+using UnityEngine;
+
+public class CanvasBillboard : MonoBehaviour
+{
+    public Camera mainCamera;
+
+    void Start()
+    {
+        // Cache the main camera reference for performance
+
+    }
+
+    void LateUpdate()
+    {
+        if (mainCamera == null) return;
+
+        // Make the canvas face the camera
+        transform.forward = mainCamera.transform.forward;
+
+    }
+}
