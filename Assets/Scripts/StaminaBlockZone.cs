@@ -1,3 +1,28 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:3e69f72890b8e8a801c929038682ff7dd20c3d797c3b30327e7b1e3c5732b261
-size 691
+using UnityEngine;
+
+public class StaminaBlockZone : MonoBehaviour
+{
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            PlayerController player = other.GetComponent<PlayerController>();
+            if (player != null)
+            {
+                player.suppressStaminaRegen = true;
+            }
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            PlayerController player = other.GetComponent<PlayerController>();
+            if (player != null)
+            {
+                player.suppressStaminaRegen = false;
+            }
+        }
+    }
+}

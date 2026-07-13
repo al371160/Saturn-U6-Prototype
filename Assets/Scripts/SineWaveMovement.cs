@@ -1,3 +1,22 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:e6374154c1ca5734da143eddf3738096805ad29bfeceae6d6ee5d8538e4ccc88
-size 612
+using UnityEngine;
+
+public class SineWaveMovement : MonoBehaviour
+{
+    [Header("Sine Wave Settings")]
+    public float amplitude = 1f;       // Height of the wave
+    public float frequency = 1f;       // Speed of the wave
+    public float phaseOffset = 0f;     // Optional phase offset
+
+    private Vector3 startPosition;
+
+    void Start()
+    {
+        startPosition = transform.position;
+    }
+
+    void Update()
+    {
+        float newY = Mathf.Sin(Time.time * frequency + phaseOffset) * amplitude;
+        transform.position = new Vector3(startPosition.x, startPosition.y + newY, startPosition.z);
+    }
+}

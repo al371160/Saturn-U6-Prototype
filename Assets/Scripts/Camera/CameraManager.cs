@@ -1,3 +1,29 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:08554d3b8e9e9a5d35df8222474e69acf0ab28f3df0092093a10be2f918433b2
-size 636
+using UnityEngine;
+
+public class CameraManager : MonoBehaviour
+{
+    public static CameraManager Instance { get; private set; }
+
+    public CameraYawToTarget mainCameraController;
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(this);
+        }
+        else
+        {
+            Instance = this;
+        }
+    }
+
+    public void SetCameraFocus(Transform newFocusTarget, float pitchAngle)
+    {
+        if (mainCameraController != null && newFocusTarget != null)
+        {
+            mainCameraController.SetMountainCenter(newFocusTarget, pitchAngle);
+        }
+    }
+
+}

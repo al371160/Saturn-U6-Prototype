@@ -1,3 +1,48 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:e3044d1e3a281ac2860bb041e8a3ae9611f9995b80b54a75ab23ba529980253b
-size 1247
+using UnityEngine;
+
+public class EnterCar : MonoBehaviour
+{
+    /*public GameObject player;             // Reference to the player GameObject
+    public GameObject car;                // Reference to the car GameObject
+    private bool isPlayerInTrigger = false;
+    public CameraManager cameraManager;
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject == player)
+        {
+            isPlayerInTrigger = true;
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.gameObject == player)
+        {
+            isPlayerInTrigger = false;
+        }
+    }
+
+    void Update()
+    {
+        if (isPlayerInTrigger && Input.GetKeyDown(KeyCode.E))
+        {
+            EnterTheCar();
+        }
+    }
+
+    private void EnterTheCar()
+    {
+        player.SetActive(false);  // Disable the player
+        CarController carController = car.GetComponent<CarController>();
+        if (carController != null)
+        {
+            carController.enabled = true;  // Enable the car controller
+            cameraManager.SwitchCamera(cameraManager.topDownCam);
+        }
+        else
+        {
+            Debug.LogWarning("CarController component not found on car object.");
+        }
+    } */
+}
