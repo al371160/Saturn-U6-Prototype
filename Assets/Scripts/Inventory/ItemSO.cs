@@ -54,6 +54,7 @@ public class ItemSO : ScriptableObject
     {
         None,
         QuickTime,
-        RockBreaking
+        RockBreaking,
+        Survivor
     }
 }
