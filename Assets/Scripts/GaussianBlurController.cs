@@ -15,7 +15,7 @@ public class GaussianBlurController : MonoBehaviour
     {
         if (postProcessingVolume.profile.TryGet(out dof))
         {
-            dof.active = true;
+            dof.active = false; // Only pay for the DoF pass while the inventory is actually open
             dof.focusDistance.value = 20f; // Start far (no blur)
         }
         else
@@ -27,16 +27,17 @@ public class GaussianBlurController : MonoBehaviour
     public void EnableBlur()
     {
         if (currentCoroutine != null) StopCoroutine(currentCoroutine);
-        currentCoroutine = StartCoroutine(LerpFocusDistance(dof.focusDistance.value, 0.1f));
+        dof.active = true;
+        currentCoroutine = StartCoroutine(LerpFocusDistance(dof.focusDistance.value, 0.1f, deactivateAfter: false));
     }
 
     public void DisableBlur()
     {
         if (currentCoroutine != null) StopCoroutine(currentCoroutine);
-        currentCoroutine = StartCoroutine(LerpFocusDistance(dof.focusDistance.value, 20f));
+        currentCoroutine = StartCoroutine(LerpFocusDistance(dof.focusDistance.value, 20f, deactivateAfter: true));
     }
 
-    private IEnumerator LerpFocusDistance(float start, float end)
+    private IEnumerator LerpFocusDistance(float start, float end, bool deactivateAfter)
     {
         float t = 0f;
 
@@ -48,6 +49,7 @@ public class GaussianBlurController : MonoBehaviour
         }
 
         dof.focusDistance.value = end;
+        if (deactivateAfter) dof.active = false;
     }
 
 }
