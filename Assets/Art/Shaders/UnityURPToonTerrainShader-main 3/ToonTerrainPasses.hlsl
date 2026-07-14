@@ -519,6 +519,7 @@ half4 SplatmapFragment(Varyings IN) : SV_TARGET
     // shadowAttenuation = 1.0h - shadowAttenuation;
 
     half3 toonRamp = SAMPLE_TEXTURE2D(_ToonRampTex, sampler_ToonRampTex, half2(NdotL, 0)).r;
+    toonRamp = lerp(_MinBrightness, _MaxBrightness, toonRamp);
 
     // Apply shadow to direct light
     half3 directLight = toonRamp * mainLight.color * albedo * shadowAttenuation * distanceAttenuation;
@@ -541,7 +542,8 @@ half4 SplatmapFragment(Varyings IN) : SV_TARGET
         
 
         half3 additionalToonRamp = SAMPLE_TEXTURE2D(_ToonRampTex, sampler_ToonRampTex, half2(NdotL_add, 0.5)).rgb;
-        
+        additionalToonRamp = lerp(_MinBrightness, _MaxBrightness, additionalToonRamp);
+
         toonLighting += additionalToonRamp * light.color * albedo * light.distanceAttenuation * light.shadowAttenuation;
     }
     #endif

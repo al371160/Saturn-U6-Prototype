@@ -8,6 +8,11 @@ Shader "ToonTerrain"
         // to the fact that heigh-based blend will be broken with multipass.
         [HideInInspector] [PerRendererData] _NumLayersCount ("Total Layer Count", Float) = 1.0
         _ToonRampTex ("Toon Ramp Texture", 2D) = "white" {}
+        // Remaps the sampled toon ramp value into this range, letting shadows be lifted
+        // (Min Brightness) or highlights be capped (Max Brightness) -- same control as the
+        // "Min/Max Brightness" properties on the Gray Toon shader used elsewhere in the game.
+        _MinBrightness("Min Brightness", Range(0, 1.0)) = 0.0
+        _MaxBrightness("Max Brightness", Range(0, 1.0)) = 1.0
         // set by terrain engine
         _TriplanarScale("TriplanarScale", Range(0, 1.0)) = 0.1
         [HideInInspector] _Control("Control (RGBA)", 2D) = "red" {}

@@ -28,6 +28,8 @@ CBUFFER_START(_Terrain)
     half4 _Splat0_ST, _Splat1_ST, _Splat2_ST, _Splat3_ST;
     half _HeightTransition;
     half _NumLayersCount;
+    half _MinBrightness;
+    half _MaxBrightness;
     half4 _VerticalTex_ST;
     half _WallTextureCutoff;
     float _TriplanarScale;
