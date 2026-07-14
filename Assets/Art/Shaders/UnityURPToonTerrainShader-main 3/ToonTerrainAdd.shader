@@ -134,8 +134,8 @@ Shader "Hidden/ToonTerrain (Add Pass)"
             #define TERRAIN_SPLAT_ADDPASS 1
             #define TERRAIN_GBUFFER 1
 
-            #include "Assets/UnityURPToonTerrainShader-main 3/ToonTerrainInput.hlsl"
-            #include "Assets/UnityURPToonTerrainShader-main 3/ToonTerrainPasses.hlsl"
+            #include "ToonTerrainInput.hlsl"
+            #include "ToonTerrainPasses.hlsl"
             ENDHLSL
         }
     }

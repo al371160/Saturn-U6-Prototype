@@ -181,7 +181,12 @@ void SplatmapMix(float4 uvMainAndLM, float4 uvSplat01, float4 uvSplat23, inout h
     defaultSmoothness *= half4(_Smoothness0, _Smoothness1, _Smoothness2, _Smoothness3);
 
 #ifndef _TERRAIN_BLEND_HEIGHT // density blending
-    if(_NumLayersCount <= 4)
+    // Only apply in the base pass: this pass-local re-weighting assumes it's picking among
+    // the terrain's dominant layers, which stops being true once additional layers (5+) are
+    // blended in additively from other passes. The old "_NumLayersCount <= 4" check disabled
+    // this terrain-wide -- even for the base pass's own first 4 layers -- as soon as a 5th
+    // layer existed anywhere on the terrain.
+    #ifndef TERRAIN_SPLAT_ADDPASS
     {
         // 20.0 is the number of steps in inputAlphaMask (Density mask. We decided 20 empirically)
         half4 opacityAsDensity = saturate((half4(diffAlbedo[0].a, diffAlbedo[1].a, diffAlbedo[2].a, diffAlbedo[3].a) - (1 - splatControl)) * 20.0);
@@ -189,6 +194,7 @@ void SplatmapMix(float4 uvMainAndLM, float4 uvSplat01, float4 uvSplat23, inout h
         half4 useOpacityAsDensityParam = { _DiffuseRemapScale0.w, _DiffuseRemapScale1.w, _DiffuseRemapScale2.w, _DiffuseRemapScale3.w }; // 1 is off
         splatControl = lerp(opacityAsDensity, splatControl, useOpacityAsDensityParam);
     }
+    #endif
 #endif
 
     // Now that splatControl has changed, we can compute the final weight and normalize
@@ -378,10 +384,12 @@ half4 SplatmapFragment(Varyings IN) : SV_TARGET
 
     half alpha = dot(splatControl, 1.0h);
 #ifdef _TERRAIN_BLEND_HEIGHT
-    // disable Height Based blend when there are more than 4 layers (multi-pass breaks the normalization)
-    if (_NumLayersCount <= 4)
+    // Only apply in the base pass -- height blend picks a per-pass winner among its own 4
+    // layers, which double-counts weight once combined additively with other passes' picks.
+    // Add-pass layers fall back to the (already pass-local) density/normalized blend instead.
+    #ifndef TERRAIN_SPLAT_ADDPASS
         HeightBasedSplatModify(splatControl, masks);
-        
+    #endif
 #endif
 
 

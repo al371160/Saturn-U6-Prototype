@@ -277,7 +277,7 @@ Shader "ToonTerrain"
 
         UsePass "Hidden/Nature/Terrain/Utilities/PICKING"
     }
-    Dependency "AddPassShader" = "ToonTerrain (Add Pass)"
+    Dependency "AddPassShader" = "Hidden/ToonTerrain (Add Pass)"
     Dependency "BaseMapShader" = "Hidden/Universal Render Pipeline/Terrain/Lit (Base Pass)"
     Dependency "BaseMapGenShader" = "Hidden/Universal Render Pipeline/Terrain/Lit (Basemap Gen)"
 
