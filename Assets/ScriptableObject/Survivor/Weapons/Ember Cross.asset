@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 467ce64649870466aab1158c6651ec73, type: 3}
+  m_Name: Ember Cross
+  m_EditorClassIdentifier: 
+  weaponId: ember_cross
+  displayName: Ember Cross
+  description: A thrown weapon that arcs out and cuts back on the return.
+  weaponType: 3
+  weaponColor: {r: 1, g: 0.5, b: 0.2, a: 1}
+  hitRadius: 0.4
+  isManualWeapon: 0
+  starStats:
+  - damage: 17.6
+    rate: 1.4
+    range: 10
+    count: 1
+  - damage: 22
+    rate: 1.3
+    range: 11
+    count: 1
+  - damage: 27.5
+    rate: 1.2
+    range: 12
+    count: 2
+  - damage: 34.100002
+    rate: 1.1
+    range: 13
+    count: 2
+  - damage: 41.8
+    rate: 1
+    range: 14
+    count: 3
+  - damage: 51.7
+    rate: 0.9
+    range: 15
+    count: 3
+  evolvesInto: {fileID: 0}

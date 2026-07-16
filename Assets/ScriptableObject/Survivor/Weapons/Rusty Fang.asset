@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 467ce64649870466aab1158c6651ec73, type: 3}
+  m_Name: Rusty Fang
+  m_EditorClassIdentifier: 
+  weaponId: rusty_fang
+  displayName: Rusty Fang
+  description: Blades that circle the poet, shredding anything that gets close.
+  weaponType: 0
+  weaponColor: {r: 0.55, g: 0.4, b: 0.25, a: 1}
+  hitRadius: 0.45
+  isManualWeapon: 0
+  starStats:
+  - damage: 15.3
+    rate: 162
+    range: 1.08
+    count: 2
+  - damage: 20.400002
+    rate: 171
+    range: 1.17
+    count: 2
+  - damage: 25.5
+    rate: 180
+    range: 1.26
+    count: 3
+  - damage: 32.3
+    rate: 189
+    range: 1.3499999
+    count: 3
+  - damage: 40.800003
+    rate: 198
+    range: 1.4399999
+    count: 4
+  - damage: 51
+    rate: 207
+    range: 1.53
+    count: 4
+  evolvesInto: {fileID: 0}
