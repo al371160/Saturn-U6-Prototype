@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 467ce64649870466aab1158c6651ec73, type: 3}
+  m_Name: Void Piercer
+  m_EditorClassIdentifier: 
+  weaponId: void_piercer
+  displayName: Void Piercer
+  description: Void Piercer.
+  weaponType: 5
+  meleePattern: 0
+  weaponColor: {r: 0.4, g: 0.15, b: 0.55, a: 1}
+  icon: {fileID: 21300000, guid: c2e06b9ee024b4ec6b7b56a18be2ccaa, type: 3}
+  hitRadius: 0.35
+  isManualWeapon: 0
+  element: 3
+  knockbackForce: 5
+  starStats:
+  - damage: 35
+    rate: 1.9
+    range: 28
+    count: 1
+    secondaryValue: 5
+  - damage: 44
+    rate: 1.8199999
+    range: 29
+    count: 1
+    secondaryValue: 5.5
+  - damage: 53
+    rate: 1.74
+    range: 30
+    count: 2
+    secondaryValue: 6
+  - damage: 62
+    rate: 1.66
+    range: 31
+    count: 2
+    secondaryValue: 6.5
+  - damage: 71
+    rate: 1.5799999
+    range: 32
+    count: 3
+    secondaryValue: 7
+  - damage: 80
+    rate: 1.5
+    range: 33
+    count: 3
+    secondaryValue: 7.5
+  evolvesInto: {fileID: 0}

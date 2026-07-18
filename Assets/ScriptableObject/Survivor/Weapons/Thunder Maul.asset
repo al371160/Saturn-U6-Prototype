@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 467ce64649870466aab1158c6651ec73, type: 3}
+  m_Name: Thunder Maul
+  m_EditorClassIdentifier: 
+  weaponId: thunder_maul
+  displayName: Thunder Maul
+  description: Thunder Maul.
+  weaponType: 11
+  meleePattern: 0
+  weaponColor: {r: 1, g: 0.95, b: 0.3, a: 1}
+  icon: {fileID: 21300000, guid: c8eb0fd4d7d564e999fdb833d19a0b77, type: 3}
+  hitRadius: 0.5
+  isManualWeapon: 1
+  element: 3
+  knockbackForce: 7
+  starStats:
+  - damage: 22
+    rate: 1.7
+    range: 2
+    count: 1
+    secondaryValue: 1.6
+  - damage: 28
+    rate: 1.6400001
+    range: 2.15
+    count: 1
+    secondaryValue: 1.8000001
+  - damage: 34
+    rate: 1.58
+    range: 2.3
+    count: 2
+    secondaryValue: 2
+  - damage: 40
+    rate: 1.5200001
+    range: 2.45
+    count: 2
+    secondaryValue: 2.2
+  - damage: 46
+    rate: 1.46
+    range: 2.6
+    count: 3
+    secondaryValue: 2.4
+  - damage: 52
+    rate: 1.4000001
+    range: 2.75
+    count: 3
+    secondaryValue: 2.6000001
+  evolvesInto: {fileID: 0}

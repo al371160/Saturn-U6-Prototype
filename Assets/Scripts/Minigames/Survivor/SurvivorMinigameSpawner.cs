@@ -9,6 +9,7 @@ public class SurvivorMinigameSpawner : MonoBehaviour
     private GameObject enemyTemplate;
     private float spawnTimer;
     private float currentSpawnInterval;
+    private float despawnCheckTimer;
 
     public void Initialize(
         SurvivorMinigameController owner,
@@ -24,14 +25,25 @@ public class SurvivorMinigameSpawner : MonoBehaviour
         enemyTemplate = enemyPrefab;
         currentSpawnInterval = config.spawnInterval;
         spawnTimer = 0.5f;
+        despawnCheckTimer = 1f;
     }
 
     private void Update()
     {
-        if (controller == null || !controller.IsRunning || config == null || player == null)
+        if (controller == null || !controller.IsRunning || controller.IsPaused || config == null || player == null)
             return;
 
-        if (enemyRoot.childCount >= config.maxEnemies)
+        despawnCheckTimer -= Time.deltaTime;
+        if (despawnCheckTimer <= 0f)
+        {
+            despawnCheckTimer = 1f;
+            DespawnStragglers();
+        }
+
+        if (controller.IsBossActive)
+            return;
+
+        if (enemyRoot.childCount >= controller.GetCurrentMaxEnemies())
             return;
 
         spawnTimer -= Time.deltaTime;
@@ -49,9 +61,11 @@ public class SurvivorMinigameSpawner : MonoBehaviour
         if (randomCircle.sqrMagnitude < 0.01f)
             randomCircle = Vector2.right;
 
+        float groundOffset = enemyTemplate.transform.localScale.y * 0.5f;
+
         Vector3 spawnOffset = new Vector3(randomCircle.x, 0f, randomCircle.y) * config.spawnRadius;
         Vector3 spawnPosition = player.position + spawnOffset;
-        spawnPosition = controller.ClampToArena(spawnPosition);
+        spawnPosition = SurvivorGroundUtility.SnapToGround(spawnPosition, config.groundMask, config.groundSnapRayHeight, groundOffset);
 
         GameObject enemyObject = Instantiate(enemyTemplate, spawnPosition, Quaternion.identity, enemyRoot);
         enemyObject.SetActive(true);
@@ -62,6 +76,30 @@ public class SurvivorMinigameSpawner : MonoBehaviour
             player,
             config.enemyHealth,
             config.enemyMoveSpeed,
-            config.enemyContactDamage);
+            config.enemyContactDamage,
+            config.enemyXPDrop,
+            config.groundMask,
+            config.groundSnapRayHeight,
+            groundOffset,
+            config.groundSnapInterval);
+
+        if (controller.enemyEliteness > 0f && Random.value < controller.enemyEliteness)
+            enemy.MakeElite();
+    }
+
+    private void DespawnStragglers()
+    {
+        float despawnSqrDistance = config.enemyDespawnDistance * config.enemyDespawnDistance;
+
+        for (int i = enemyRoot.childCount - 1; i >= 0; i--)
+        {
+            Transform enemyTransform = enemyRoot.GetChild(i);
+            if (enemyTransform.GetComponent<SurvivorBossEnemy>() != null)
+                continue;
+
+            float sqrDistance = (enemyTransform.position - player.position).sqrMagnitude;
+            if (sqrDistance > despawnSqrDistance)
+                Destroy(enemyTransform.gameObject);
+        }
     }
 }

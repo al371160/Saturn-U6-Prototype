@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a09320fdc660d42f08438ef81ecb3c49, type: 3}
+  m_Name: Choir Warden
+  m_EditorClassIdentifier: 
+  bossId: choir_warden
+  displayName: The Choir Warden
+  description: A ranged caster that volleys projectiles and charges through its target.
+  bossColor: {r: 0.6, g: 0.1, b: 0.7, a: 1}
+  maxHealth: 1200
+  moveSpeed: 2.8
+  contactDamage: 15
+  scale: 2.2
+  recoverDuration: 1.2
+  enrageHealthFraction: 0.5
+  enrageMoveSpeedMultiplier: 1.2
+  phase1Attacks:
+  - attackType: 2
+    telegraphDuration: 1
+    damage: 15
+    radius: 0
+    range: 20
+    projectileCount: 3
+    cooldownAfterUse: 2.5
+    weight: 1
+  - attackType: 3
+    telegraphDuration: 0.9
+    damage: 25
+    radius: 2
+    range: 8
+    projectileCount: 3
+    cooldownAfterUse: 3
+    weight: 0.7
+  phase2Attacks:
+  - attackType: 2
+    telegraphDuration: 0.7
+    damage: 18
+    radius: 0
+    range: 22
+    projectileCount: 5
+    cooldownAfterUse: 1.8
+    weight: 1
+  - attackType: 3
+    telegraphDuration: 0.6
+    damage: 32
+    radius: 2.5
+    range: 10
+    projectileCount: 5
+    cooldownAfterUse: 2
+    weight: 0.8
+  - attackType: 1
+    telegraphDuration: 0.8
+    damage: 30
+    radius: 5
+    range: 10
+    projectileCount: 5
+    cooldownAfterUse: 3
+    weight: 0.6
+  bossXPReward: 150

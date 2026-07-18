@@ -1,0 +1,152 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fbe882df29c04cc28eb4775b0db072b, type: 3}
+  m_Name: Level 1 Survivor Config
+  m_EditorClassIdentifier: 
+  playerMaxHealth: 100
+  contactDamageCooldown: 0.5
+  levelUpFont: {fileID: 11400000, guid: f411f9952959c48509abed7d05ab9133, type: 2}
+  startingWeapons: []
+  startingWeaponChoices:
+  - {fileID: 11400000, guid: d675583f750f54e02a9e5faa84098053, type: 2}
+  - {fileID: 11400000, guid: a0fa5b525cf8f47058b682ce58e18932, type: 2}
+  availableWeapons:
+  - {fileID: 11400000, guid: d675583f750f54e02a9e5faa84098053, type: 2}
+  - {fileID: 11400000, guid: a0fa5b525cf8f47058b682ce58e18932, type: 2}
+  - {fileID: 11400000, guid: 8e5531572805e42e883aaf3b05711e9b, type: 2}
+  - {fileID: 11400000, guid: 290b0308f5a1e461c92d061da0b51698, type: 2}
+  - {fileID: 11400000, guid: a92691a23d8074f3abb8f3e80768b22d, type: 2}
+  - {fileID: 11400000, guid: d01e4c54b5ef242ce8ca980d6dbfad48, type: 2}
+  - {fileID: 11400000, guid: 3430814d5033e45b6bc1e3c1cbbe5652, type: 2}
+  - {fileID: 11400000, guid: 9ba168e5c4c484b9ca274e662d3e312f, type: 2}
+  - {fileID: 11400000, guid: d6dd88a5ee2854635ad342da16918ff7, type: 2}
+  - {fileID: 11400000, guid: bdebf66435a244b1cb04bebce2c68150, type: 2}
+  - {fileID: 11400000, guid: c3ce7f58b4abe4ace8dffcff9da7a766, type: 2}
+  - {fileID: 11400000, guid: 15fb12ff5386742569109515f98b04d6, type: 2}
+  - {fileID: 11400000, guid: 7a687938fe280498bbf8e34508daaf2b, type: 2}
+  - {fileID: 11400000, guid: 6c2f7b245d09b4ecda477d7a66824bf9, type: 2}
+  - {fileID: 11400000, guid: 2644f3285810e4bd989fd97477c8de68, type: 2}
+  - {fileID: 11400000, guid: 4142f04d702134fd58db294f3e57590a, type: 2}
+  - {fileID: 11400000, guid: b1086d884751049bf94e868794ed2d22, type: 2}
+  - {fileID: 11400000, guid: 92bc133e128be467bb4c03111c78cb89, type: 2}
+  - {fileID: 11400000, guid: 4eacc9ec657bc4e9293e7cf2c9f7cab4, type: 2}
+  - {fileID: 11400000, guid: 24b00c7f42e9f404fbd52e6200bd55e4, type: 2}
+  - {fileID: 11400000, guid: c2f0ab0e0e76b4c0f8b65d3dc3d4e411, type: 2}
+  - {fileID: 11400000, guid: 68ca2d8584cea4de398ff6737911b265, type: 2}
+  - {fileID: 11400000, guid: 0887a29753ee84f36a02407989b5fd00, type: 2}
+  - {fileID: 11400000, guid: f89de3789648d4c02be16ac9487899fa, type: 2}
+  - {fileID: 11400000, guid: 1ea9378f7eb8d486caa5285edaf67ee9, type: 2}
+  - {fileID: 11400000, guid: 255cd818e06e54b75a2a0d3447a16a01, type: 2}
+  - {fileID: 11400000, guid: 061fffe2abd7f4da9a9f14c7c11b4ee0, type: 2}
+  - {fileID: 11400000, guid: c69faf355a1cb4686b849a615b6472bb, type: 2}
+  - {fileID: 11400000, guid: 22fcc3ae5237e4f5b848253ceeac34c1, type: 2}
+  - {fileID: 11400000, guid: 6a0276759d67c49d28f38c5cf1b022de, type: 2}
+  - {fileID: 11400000, guid: 17d6aaad143fd495f8d93591d93619f8, type: 2}
+  - {fileID: 11400000, guid: 5e1392f382d0341f09299b418e04bfab, type: 2}
+  - {fileID: 11400000, guid: f4e4fa5bb92ae4aa5b7dfb17f9c4524c, type: 2}
+  - {fileID: 11400000, guid: c8e4072419844432f8b325a33be3fbd7, type: 2}
+  - {fileID: 11400000, guid: ffbc0d9711af64dfe8355ac7911661d3, type: 2}
+  availableBuffs:
+  - {fileID: 11400000, guid: 380f9e2f7a75b4a3f83f939bc528ddfd, type: 2}
+  - {fileID: 11400000, guid: afcf49ebd52564d46814a2f651112199, type: 2}
+  - {fileID: 11400000, guid: a96d2096b9144464099fd1902faccacf, type: 2}
+  - {fileID: 11400000, guid: 14ee6740a51e3415983dedf27e524634, type: 2}
+  - {fileID: 11400000, guid: 0df14f7406ee4404bb64d75094f93ae6, type: 2}
+  - {fileID: 11400000, guid: 6dcbc2402744a4ce6b444d3d40f95f29, type: 2}
+  - {fileID: 11400000, guid: c544868c1d0454acda878cbaf61ca705, type: 2}
+  - {fileID: 11400000, guid: ced287eb54a174b7d87a50714c64b98d, type: 2}
+  - {fileID: 11400000, guid: 8ed868b2ebf054193a02131e30d31007, type: 2}
+  - {fileID: 11400000, guid: 0f7c6bd53ea1949799dfeaf19db07f18, type: 2}
+  - {fileID: 11400000, guid: ee703bbb2515545ae8a360ff5d6be89e, type: 2}
+  - {fileID: 11400000, guid: 1957a7e99686e47688655d733d55a967, type: 2}
+  - {fileID: 11400000, guid: 00a25cdd5cf7a48f38435476140427fa, type: 2}
+  - {fileID: 11400000, guid: cdb1de271509344548b8bc99d386df6f, type: 2}
+  - {fileID: 11400000, guid: 27e8b9ac25a4a4e8a99f1fa0bc33b767, type: 2}
+  - {fileID: 11400000, guid: c98d3e6c4bfbc4b71b4c2e8943dbabe7, type: 2}
+  - {fileID: 11400000, guid: 8e2d6b5c39f4048e3b590711aa987d3e, type: 2}
+  - {fileID: 11400000, guid: 5b20b523f29da44cebcc4f71f633afd7, type: 2}
+  - {fileID: 11400000, guid: 8fdeea77b73af47a2b6d501e45b215e7, type: 2}
+  - {fileID: 11400000, guid: c7eccd2e7fdf94b3a9f2bc06a598012d, type: 2}
+  - {fileID: 11400000, guid: 9dcd5f10f35c7441aaa40000d52b16c1, type: 2}
+  - {fileID: 11400000, guid: b479b4ca357504c0a9af276ca0e633cd, type: 2}
+  - {fileID: 11400000, guid: 9c8d041cd36664da79e978c41ac00081, type: 2}
+  - {fileID: 11400000, guid: d641232e945454825a3ed21670dd06b1, type: 2}
+  - {fileID: 11400000, guid: 5ef794d7a64b844bab8061d3554acea9, type: 2}
+  - {fileID: 11400000, guid: 0299f26912dad47cc95937524133b966, type: 2}
+  - {fileID: 11400000, guid: ba066c94c3ae34940bd3e8baadfe7834, type: 2}
+  - {fileID: 11400000, guid: f7c7e4aaed9b94b9c8ec8f61e0c97559, type: 2}
+  - {fileID: 11400000, guid: 49f037385c2f14ac5ada3b13110255f9, type: 2}
+  - {fileID: 11400000, guid: d834bba7b594042a4bcca746f83c93d1, type: 2}
+  - {fileID: 11400000, guid: 6cdb52dcd625d4b238a3aaa7163f02bb, type: 2}
+  - {fileID: 11400000, guid: 6d4405c6b56a04c8b88017739013dd66, type: 2}
+  - {fileID: 11400000, guid: 699a6b19e3a204b52abe43a11e51f66c, type: 2}
+  - {fileID: 11400000, guid: 97da0cd5bd9c24b27a87c7eee0549acb, type: 2}
+  - {fileID: 11400000, guid: 5f3724c3819104f038c47fea3a8e9eb0, type: 2}
+  - {fileID: 11400000, guid: 77563772c0ee64950bf2d8bdf4bf8b55, type: 2}
+  - {fileID: 11400000, guid: 49f80860792d24be68d5d14ea29eb657, type: 2}
+  - {fileID: 11400000, guid: 1f1f0afebf8264c4197b056120c984a3, type: 2}
+  - {fileID: 11400000, guid: 4fd8ae239e5ce4e96bb70d46775dee07, type: 2}
+  - {fileID: 11400000, guid: 29014236afbaf4bbf95786d5856020cd, type: 2}
+  - {fileID: 11400000, guid: 826c0399e091f4c5ebff82db1b25bc3a, type: 2}
+  - {fileID: 11400000, guid: f81a52b21d7fb4cbc8540ac94a134aa3, type: 2}
+  - {fileID: 11400000, guid: 01bfc4b3b01d6425592609f1b23414ad, type: 2}
+  - {fileID: 11400000, guid: 4327ec28352454117979461b7ecaef99, type: 2}
+  - {fileID: 11400000, guid: 2b0b04e0289b442eb8232abed4e8c5cb, type: 2}
+  - {fileID: 11400000, guid: fdf83103154824692942d681946805b1, type: 2}
+  - {fileID: 11400000, guid: 3164cda54098841e38d072363ac6f6c5, type: 2}
+  - {fileID: 11400000, guid: 2cf0490d20cc14854a877b705a0da61d, type: 2}
+  - {fileID: 11400000, guid: 954ebab0400bb46dba1dbd5bc37e829f, type: 2}
+  - {fileID: 11400000, guid: cadd227bb9a0a4980a78e89cd711467f, type: 2}
+  - {fileID: 11400000, guid: 425bdf2558b7f49928629bbfd873eddd, type: 2}
+  - {fileID: 11400000, guid: 82ee7cbedd19640a899c62faeddbc9c5, type: 2}
+  - {fileID: 11400000, guid: 3b47c0abefb9047a8a6ae04523172b91, type: 2}
+  - {fileID: 11400000, guid: b958e693c96ff4e4d907f6b248d8435b, type: 2}
+  - {fileID: 11400000, guid: b873ead00cc53453db4e326c3b717f57, type: 2}
+  - {fileID: 11400000, guid: 21453ecd982f043a7bdfcc9ab18d9850, type: 2}
+  - {fileID: 11400000, guid: eb4c6c971ca80424fbd87da350a5d07a, type: 2}
+  - {fileID: 11400000, guid: 37ee5b930ad4c4b55943a7135e5e54c5, type: 2}
+  - {fileID: 11400000, guid: 483dad0b221364ea2bc05527b4a90133, type: 2}
+  - {fileID: 11400000, guid: 97a286cc247e64b2f82e76881ed53f8d, type: 2}
+  - {fileID: 11400000, guid: af0e97a85ffa24c18942ba13546e06b8, type: 2}
+  - {fileID: 11400000, guid: 4479ae7d9aff54b1badbc39539878345, type: 2}
+  - {fileID: 11400000, guid: 87166b9a9643444de8abb241dd03869f, type: 2}
+  - {fileID: 11400000, guid: 2055e78b4b0e14194ba47deb8f498001, type: 2}
+  upgradeChoicesPerLevelUp: 3
+  enemyXPDrop: 5
+  xpGemMagnetRadius: 3.5
+  xpStepTable: 050000000a0000000f00000019000000230000002d0000003c0000004b0000005a0000006e0000008200000096000000af000000c8000000e6000000040100002c010000540100007c010000a4010000
+  xpPerLevelGrowth: 10
+  enemyMoveSpeed: 2.5
+  enemyHealth: 40
+  enemyContactDamage: 12
+  spawnInterval: 0.9
+  minSpawnInterval: 0.3
+  spawnRadius: 22
+  baseMaxEnemies: 20
+  maxEnemiesPerLevel: 8
+  maxEnemiesPerLevelSquared: 0.55
+  maxEnemiesCap: 320
+  enemyDespawnDistance: 60
+  groundSnapInterval: 0.2
+  killsPerBossWave: 15
+  bossPool:
+  - {fileID: 11400000, guid: 0f03329c156c64c4c9840c1c4a14ec96, type: 2}
+  - {fileID: 11400000, guid: c9d0ec441b4db4e8a8caef90100beefd, type: 2}
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 8
+  groundSnapRayHeight: 50
+  useBattleBusIntro: 1
+  busPathHalfExtent: 350
+  busFlightAltitude: 160
+  busFlightDuration: 25
+  busCenterPassDistance: 40

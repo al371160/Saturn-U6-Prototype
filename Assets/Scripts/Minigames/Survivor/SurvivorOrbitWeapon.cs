@@ -1,47 +1,52 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SurvivorOrbitWeapon : MonoBehaviour
+public class SurvivorOrbitWeapon : SurvivorWeaponBehavior
 {
-    private SurvivorMinigameController controller;
     private Transform[] orbitNodes;
     private float orbitAngle;
     private float radius;
     private float speed;
     private float damage;
-    private float hitRadius;
     private readonly Collider[] overlapBuffer = new Collider[16];
-    private readonly Dictionary<SurvivorMinigameEnemy, float> hitCooldowns = new Dictionary<SurvivorMinigameEnemy, float>();
+    private readonly Dictionary<ISurvivorDamageable, float> hitCooldowns = new Dictionary<ISurvivorDamageable, float>();
     private const float HitInterval = 0.2f;
 
-    public void Initialize(
-        SurvivorMinigameController owner,
-        int count,
-        float orbitRadius,
-        float orbitSpeed,
-        float orbitDamage,
-        float hitRadius)
+    protected override void OnInitialize()
     {
-        controller = owner;
-        radius = orbitRadius;
-        speed = orbitSpeed;
-        damage = orbitDamage;
-        this.hitRadius = hitRadius;
+        ApplyStats();
+        BuildOrbitNodes(data.GetStats(starLevel).count);
+    }
 
-        BuildOrbitNodes(count);
+    protected override void OnStarLevelChanged()
+    {
+        int previousCount = orbitNodes?.Length ?? 0;
+        ApplyStats();
+
+        int desiredCount = data.GetStats(starLevel).count;
+        if (desiredCount != previousCount)
+            BuildOrbitNodes(desiredCount);
+    }
+
+    private void ApplyStats()
+    {
+        SurvivorWeaponStarStats stats = data.GetStats(starLevel);
+        radius = stats.range;
+        speed = stats.rate;
+        damage = stats.damage;
     }
 
     private void BuildOrbitNodes(int count)
     {
         ClearOrbitNodes();
 
-        orbitNodes = new Transform[count];
-        for (int i = 0; i < count; i++)
+        orbitNodes = new Transform[Mathf.Max(1, count)];
+        for (int i = 0; i < orbitNodes.Length; i++)
         {
             GameObject node = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             node.name = $"OrbitBlade_{i}";
             node.transform.SetParent(transform, false);
-            node.transform.localScale = Vector3.one * hitRadius * 2f;
+            node.transform.localScale = Vector3.one * data.hitRadius * 2f;
 
             Collider col = node.GetComponent<Collider>();
             if (col != null)
@@ -51,12 +56,11 @@ public class SurvivorOrbitWeapon : MonoBehaviour
             rb.isKinematic = true;
             rb.useGravity = false;
 
-            SurvivorOrbitHitbox hitbox = node.AddComponent<SurvivorOrbitHitbox>();
-            hitbox.Initialize(this, damage);
+            node.AddComponent<SurvivorOrbitHitbox>().Initialize(this);
 
             Renderer renderer = node.GetComponent<Renderer>();
             if (renderer != null)
-                renderer.material.color = new Color(0.4f, 0.85f, 1f);
+                renderer.material.color = data.weaponColor;
 
             orbitNodes[i] = node.transform;
         }
@@ -64,16 +68,23 @@ public class SurvivorOrbitWeapon : MonoBehaviour
 
     private void Update()
     {
+        if (controller == null || !controller.IsRunning || controller.IsPaused)
+            return;
+
         if (orbitNodes == null || orbitNodes.Length == 0)
             return;
 
-        orbitAngle += speed * Time.deltaTime;
+        float rateMultiplier = controller.WeaponManager != null ? controller.WeaponManager.RateMultiplier : 1f;
+        float rangeMultiplier = controller.WeaponManager != null ? controller.WeaponManager.RangeMultiplier : 1f;
+        float effectiveRadius = radius * rangeMultiplier;
+
+        orbitAngle += speed * rateMultiplier * Time.deltaTime;
 
         for (int i = 0; i < orbitNodes.Length; i++)
         {
             float angle = orbitAngle + (360f / orbitNodes.Length) * i;
             float rad = angle * Mathf.Deg2Rad;
-            Vector3 offset = new Vector3(Mathf.Cos(rad), 0f, Mathf.Sin(rad)) * radius;
+            Vector3 offset = new Vector3(Mathf.Cos(rad), 0f, Mathf.Sin(rad)) * effectiveRadius;
             orbitNodes[i].localPosition = offset + Vector3.up * 0.6f;
             DamageAtPoint(orbitNodes[i].position);
         }
@@ -82,27 +93,31 @@ public class SurvivorOrbitWeapon : MonoBehaviour
     private void DamageAtPoint(Vector3 worldPoint)
     {
         float now = Time.time;
-        int hitCount = Physics.OverlapSphereNonAlloc(worldPoint, hitRadius, overlapBuffer);
+        int hitCount = Physics.OverlapSphereNonAlloc(worldPoint, data.hitRadius, overlapBuffer);
         for (int i = 0; i < hitCount; i++)
         {
-            SurvivorMinigameEnemy enemy = overlapBuffer[i].GetComponent<SurvivorMinigameEnemy>();
-            if (enemy == null)
+            ISurvivorDamageable target = overlapBuffer[i].GetComponent<ISurvivorDamageable>();
+            if (target == null)
                 continue;
 
-            if (hitCooldowns.TryGetValue(enemy, out float nextHitTime) && now < nextHitTime)
+            if (hitCooldowns.TryGetValue(target, out float nextHitTime) && now < nextHitTime)
                 continue;
 
-            hitCooldowns[enemy] = now + HitInterval;
-            DamageEnemy(enemy);
+            hitCooldowns[target] = now + HitInterval;
+            DealDamage(overlapBuffer[i].gameObject, worldPoint);
         }
     }
 
-    public void DamageEnemy(SurvivorMinigameEnemy enemy)
+    public void DealDamage(GameObject targetObject, Vector3 sourcePoint)
     {
-        if (enemy == null || controller == null || !controller.IsRunning)
+        if (targetObject == null || controller == null || !controller.IsRunning)
             return;
 
-        enemy.TakeDamage(damage);
+        float damageMultiplier = controller.WeaponManager != null ? controller.WeaponManager.DamageMultiplier : 1f;
+        Vector3 direction = targetObject.transform.position - sourcePoint;
+        direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : transform.forward;
+
+        SurvivorCombatFX.ApplyHit(targetObject, damage * damageMultiplier, data.element, direction, data.knockbackForce);
     }
 
     private void ClearOrbitNodes()
@@ -128,18 +143,15 @@ public class SurvivorOrbitWeapon : MonoBehaviour
 public class SurvivorOrbitHitbox : MonoBehaviour
 {
     private SurvivorOrbitWeapon weapon;
-    private float damage;
 
-    public void Initialize(SurvivorOrbitWeapon owner, float hitDamage)
+    public void Initialize(SurvivorOrbitWeapon owner)
     {
         weapon = owner;
-        damage = hitDamage;
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        SurvivorMinigameEnemy enemy = other.GetComponent<SurvivorMinigameEnemy>();
-        if (enemy != null)
-            weapon.DamageEnemy(enemy);
+        if (other.GetComponent<ISurvivorDamageable>() != null)
+            weapon.DealDamage(other.gameObject, transform.position);
     }
 }

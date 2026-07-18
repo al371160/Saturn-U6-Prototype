@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 467ce64649870466aab1158c6651ec73, type: 3}
+  m_Name: Ink Blade
+  m_EditorClassIdentifier: 
+  weaponId: ink_blade
+  displayName: Ink Blade
+  description: Ink Blade.
+  weaponType: 11
+  meleePattern: 2
+  weaponColor: {r: 0.15, g: 0.12, b: 0.18, a: 1}
+  icon: {fileID: 21300000, guid: c8eb0fd4d7d564e999fdb833d19a0b77, type: 3}
+  hitRadius: 0.4
+  isManualWeapon: 1
+  element: 4
+  knockbackForce: 4
+  starStats:
+  - damage: 16
+    rate: 0.7
+    range: 1.8
+    count: 1
+    secondaryValue: 1.1
+  - damage: 20.5
+    rate: 0.675
+    range: 1.92
+    count: 1
+    secondaryValue: 1.2
+  - damage: 25
+    rate: 0.65
+    range: 2.04
+    count: 2
+    secondaryValue: 1.3000001
+  - damage: 29.5
+    rate: 0.625
+    range: 2.1599998
+    count: 2
+    secondaryValue: 1.4
+  - damage: 34
+    rate: 0.59999996
+    range: 2.28
+    count: 3
+    secondaryValue: 1.5
+  - damage: 38.5
+    rate: 0.575
+    range: 2.3999999
+    count: 3
+    secondaryValue: 1.6
+  evolvesInto: {fileID: 0}
