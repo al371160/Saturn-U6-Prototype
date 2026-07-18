@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buffId: modest_reach
   displayName: Modest Reach
-  description: +14% weapon area/range
+  description: +11% weapon area/range
   iconColor: {r: 0.4, g: 0.7, b: 1, a: 1}
+  icon: {fileID: 21300000, guid: 9406fb72760ed410c9fd97a2ee7f8023, type: 3}
   buffType: 4
-  magnitude: 0.14
+  magnitude: 0.114999995

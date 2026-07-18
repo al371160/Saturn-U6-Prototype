@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 467ce64649870466aab1158c6651ec73, type: 3}
+  m_Name: Venom Kunai
+  m_EditorClassIdentifier: 
+  weaponId: venom_kunai
+  displayName: Venom Kunai
+  description: Venom Kunai.
+  weaponType: 1
+  meleePattern: 0
+  weaponColor: {r: 0.4, g: 0.85, b: 0.3, a: 1}
+  icon: {fileID: 21300000, guid: 29b9ae535cd9e4b1e894c74c888a568e, type: 3}
+  hitRadius: 0.3
+  isManualWeapon: 0
+  element: 5
+  knockbackForce: 0
+  starStats:
+  - damage: 12
+    rate: 1.1
+    range: 14
+    count: 1
+    secondaryValue: 0
+  - damage: 15
+    rate: 1.0500001
+    range: 14.5
+    count: 1
+    secondaryValue: 0
+  - damage: 18
+    rate: 1
+    range: 15
+    count: 2
+    secondaryValue: 0
+  - damage: 21
+    rate: 0.95000005
+    range: 15.5
+    count: 2
+    secondaryValue: 0
+  - damage: 24
+    rate: 0.90000004
+    range: 16
+    count: 3
+    secondaryValue: 0
+  - damage: 27
+    rate: 0.85
+    range: 16.5
+    count: 3
+    secondaryValue: 0
+  evolvesInto: {fileID: 0}

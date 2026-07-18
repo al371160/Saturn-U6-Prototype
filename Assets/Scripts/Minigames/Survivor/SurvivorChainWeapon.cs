@@ -20,7 +20,7 @@ public class SurvivorChainWeapon : SurvivorWeaponBehavior
 
     private void Update()
     {
-        if (controller == null || !controller.IsRunning || controller.IsPaused)
+        if (controller == null || !controller.IsRunning || controller.IsPaused || !CanFire())
             return;
 
         SurvivorWeaponStarStats stats = data.GetStats(starLevel);
@@ -53,8 +53,12 @@ public class SurvivorChainWeapon : SurvivorWeaponBehavior
             if (next == null)
                 break;
 
-            ISurvivorDamageable damageable = next.GetComponent<ISurvivorDamageable>();
-            damageable?.TakeDamage(stats.damage * damageMultiplier);
+            if (next.GetComponent<ISurvivorDamageable>() != null)
+            {
+                Vector3 direction = next.position - currentPoint;
+                direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : transform.forward;
+                SurvivorCombatFX.ApplyHit(next.gameObject, stats.damage * damageMultiplier, data.element, direction, data.knockbackForce);
+            }
 
             visited.Add(next);
             currentPoint = next.position;

@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buffId: greater_renewal
   displayName: Greater Renewal
-  description: +1.6 HP regen per second
+  description: +1.8 HP regen per second
   iconColor: {r: 0.4, g: 0.9, b: 0.5, a: 1}
+  icon: {fileID: 21300000, guid: 4ff321ad51236423d9eafe0e513da501, type: 3}
   buffType: 7
-  magnitude: 1.6
+  magnitude: 1.75

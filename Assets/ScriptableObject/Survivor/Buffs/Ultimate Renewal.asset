@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buffId: ultimate_renewal
   displayName: Ultimate Renewal
-  description: +2.5 HP regen per second
+  description: +2.2 HP regen per second
   iconColor: {r: 0.4, g: 0.9, b: 0.5, a: 1}
+  icon: {fileID: 21300000, guid: 4ff321ad51236423d9eafe0e513da501, type: 3}
   buffType: 7
-  magnitude: 2.5
+  magnitude: 2.2

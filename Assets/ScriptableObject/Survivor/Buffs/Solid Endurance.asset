@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buffId: solid_endurance
   displayName: Solid Endurance
-  description: +23 max stamina
+  description: +22 max stamina
   iconColor: {r: 0.8, g: 0.85, b: 0.3, a: 1}
+  icon: {fileID: 21300000, guid: e98a949ceae7f49c993bbda35548fb52, type: 3}
   buffType: 9
-  magnitude: 23
+  magnitude: 22

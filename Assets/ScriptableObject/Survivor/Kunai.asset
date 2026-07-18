@@ -16,32 +16,42 @@ MonoBehaviour:
   displayName: Kunai
   description: Auto-thrown kunai that seek out the nearest threat.
   weaponType: 1
+  meleePattern: 0
   weaponColor: {r: 0.95, g: 0.85, b: 0.3, a: 1}
+  icon: {fileID: 21300000, guid: 29b9ae535cd9e4b1e894c74c888a568e, type: 3}
   hitRadius: 0.3
   isManualWeapon: 0
+  element: 0
+  knockbackForce: 0
   starStats:
   - damage: 15
     rate: 1.2
     range: 14
     count: 1
+    secondaryValue: 0
   - damage: 18
     rate: 1.1
     range: 15
     count: 1
+    secondaryValue: 0
   - damage: 22
     rate: 1
     range: 16
     count: 2
+    secondaryValue: 0
   - damage: 27
     rate: 0.9
     range: 17
     count: 2
+    secondaryValue: 0
   - damage: 33
     rate: 0.8
     range: 18
     count: 3
+    secondaryValue: 0
   - damage: 40
     rate: 0.7
     range: 19
     count: 3
+    secondaryValue: 0
   evolvesInto: {fileID: 0}

@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 467ce64649870466aab1158c6651ec73, type: 3}
+  m_Name: Frost Drone
+  m_EditorClassIdentifier: 
+  weaponId: frost_drone
+  displayName: Frost Drone
+  description: Frost Drone.
+  weaponType: 10
+  meleePattern: 0
+  weaponColor: {r: 0.55, g: 0.85, b: 1, a: 1}
+  icon: {fileID: 21300000, guid: cd07aa5cb50e24190949da26b43f1551, type: 3}
+  hitRadius: 0.3
+  isManualWeapon: 0
+  element: 2
+  knockbackForce: 0
+  starStats:
+  - damage: 6
+    rate: 1.1
+    range: 11
+    count: 1
+    secondaryValue: 0
+  - damage: 7.5
+    rate: 1.07
+    range: 11.4
+    count: 1
+    secondaryValue: 0
+  - damage: 9
+    rate: 1.0400001
+    range: 11.8
+    count: 2
+    secondaryValue: 0
+  - damage: 10.5
+    rate: 1.01
+    range: 12.2
+    count: 2
+    secondaryValue: 0
+  - damage: 12
+    rate: 0.98
+    range: 12.6
+    count: 3
+    secondaryValue: 0
+  - damage: 13.5
+    rate: 0.95000005
+    range: 13
+    count: 3
+    secondaryValue: 0
+  evolvesInto: {fileID: 0}

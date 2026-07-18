@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buffId: modest_allure
   displayName: Modest Allure
-  description: +1.8 pickup magnet radius
+  description: +1.5 pickup magnet radius
   iconColor: {r: 0.9, g: 0.75, b: 0.3, a: 1}
+  icon: {fileID: 21300000, guid: d3cba805b616a4ae7a1eb08185d4f69d, type: 3}
   buffType: 6
-  magnitude: 1.8
+  magnitude: 1.5

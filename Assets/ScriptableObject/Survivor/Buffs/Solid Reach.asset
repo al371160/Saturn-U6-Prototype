@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buffId: solid_reach
   displayName: Solid Reach
-  description: +18% weapon area/range
+  description: +17% weapon area/range
   iconColor: {r: 0.4, g: 0.7, b: 1, a: 1}
+  icon: {fileID: 21300000, guid: 9406fb72760ed410c9fd97a2ee7f8023, type: 3}
   buffType: 4
-  magnitude: 0.17999999
+  magnitude: 0.17

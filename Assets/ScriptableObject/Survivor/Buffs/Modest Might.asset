@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buffId: modest_might
   displayName: Modest Might
-  description: +18% weapon damage
+  description: +15% weapon damage
   iconColor: {r: 0.85, g: 0.2, b: 0.2, a: 1}
+  icon: {fileID: 21300000, guid: d2062e151417c486b9007986bfff3fca, type: 3}
   buffType: 2
-  magnitude: 0.18
+  magnitude: 0.15

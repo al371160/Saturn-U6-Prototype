@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -23,12 +24,63 @@ public class SurvivorMinigameController : MonoBehaviour
 
     public bool IsRunning { get; private set; }
     public bool IsPaused { get; private set; }
-    public bool IsBossActive { get; private set; }
+    public bool IsBossActive => activeBosses.Count > 0;
+    public SurvivorRoundResult? FinalResult { get; private set; }
+    private readonly List<SurvivorBossEnemy> activeBosses = new List<SurvivorBossEnemy>();
+
+    private SurvivorRoundRules roundRules;
+
+    /// <summary>Opt-in mode plug-in — leaving this unset preserves the original fully-endless
+    /// behavior exactly (no auto win/loss).</summary>
+    public void SetRoundRules(SurvivorRoundRules rules)
+    {
+        roundRules = rules;
+        roundRules?.Initialize(this);
+    }
+
+    /// <summary>Ends the round for good (unlike FreezeGameplay, which is for transient menus).</summary>
+    public void EndRound(SurvivorRoundResult result)
+    {
+        if (!IsRunning)
+            return;
+
+        IsRunning = false;
+        FinalResult = result;
+        IsPaused = true;
+        Time.timeScale = 0f;
+        SetMenuMouseUnlocked(true);
+
+        if (statusText != null)
+            statusText.text = $"{result.outcome}: {result.reason}";
+    }
+
+    [Header("Live Tuning (design/debug)")]
+    [Tooltip("Multiplies the enemy count cap — a pure 'how many enemies' knob.")]
+    [Range(0.1f, 5f)]
+    public float enemyIntensity = 1f;
+    [Tooltip("Fraction of newly spawned enemies that spawn as tougher, bigger 'elite' variants (0 = none, 1 = all).")]
+    [Range(0f, 1f)]
+    public float enemyEliteness = 0f;
 
     public SurvivorMinigamePlayer MinigamePlayer => minigamePlayer;
     public SurvivorWeaponManager WeaponManager => weaponManager;
     public SurvivorPlayerProgression Progression => progression;
     public Transform enemyRoot;
+
+    /// <summary>Every buff acquired this run and its current stack count, purely for display
+    /// (the inventory UI) — the actual gameplay effect is already baked into the relevant
+    /// stat multipliers by SurvivorBuffDataSO.Apply() when it was picked.</summary>
+    public IReadOnlyDictionary<SurvivorBuffDataSO, int> AcquiredBuffs => acquiredBuffs;
+    private readonly Dictionary<SurvivorBuffDataSO, int> acquiredBuffs = new Dictionary<SurvivorBuffDataSO, int>();
+
+    public void RecordBuffAcquired(SurvivorBuffDataSO buff)
+    {
+        if (buff == null)
+            return;
+
+        acquiredBuffs.TryGetValue(buff, out int count);
+        acquiredBuffs[buff] = count + 1;
+    }
 
     private SurvivorMinigamePlayer minigamePlayer;
     private PlayerController worldPlayer;
@@ -57,6 +109,9 @@ public class SurvivorMinigameController : MonoBehaviour
     {
         EnsureRuntimeSetup();
 
+        if (config != null)
+            SurvivorDamagePopup.SharedFont = config.levelUpFont;
+
         worldPlayer = FindFirstObjectByType<PlayerController>();
         if (worldPlayer == null)
         {
@@ -64,18 +119,119 @@ public class SurvivorMinigameController : MonoBehaviour
             return;
         }
 
+        if (config.useBattleBusIntro)
+            StartCoroutine(BattleBusIntroRoutine());
+        else
+            BeginCombat();
+    }
+
+    private bool playerSystemsReady;
+    private bool weaponChoiceHandled;
+
+    /// <summary>Idempotent — safe to call both early (bus ride) and again from BeginCombat() (non-bus path).</summary>
+    private void EnsurePlayerSystemsReady()
+    {
+        if (playerSystemsReady)
+            return;
+        playerSystemsReady = true;
+
         AttachToPlayer(worldPlayer);
-
         progression.Initialize(config);
-        spawner.Initialize(this, config, minigamePlayer.transform, enemyRoot, enemyTemplate);
+    }
 
-        IsRunning = true;
-        RefreshHud();
+    /// <summary>Idempotent — the bus path handles this while riding; the non-bus path handles it
+    /// from BeginCombat() same as before.</summary>
+    private void HandleWeaponChoiceIfNeeded()
+    {
+        if (weaponChoiceHandled)
+            return;
+        weaponChoiceHandled = true;
 
         if (config.startingWeapons != null && config.startingWeapons.Length > 0)
             EquipStartingWeapons();
         else
             ShowInitialWeaponChoice();
+    }
+
+    private IEnumerator BattleBusIntroRoutine()
+    {
+        GameObject busObject = new GameObject("SurvivorBattleBus");
+        SurvivorBattleBus bus = busObject.AddComponent<SurvivorBattleBus>();
+        bus.pathHalfExtent = config.busPathHalfExtent;
+        bus.flightAltitude = config.busFlightAltitude;
+        bus.flightDuration = config.busFlightDuration;
+        bus.centerPassDistance = config.busCenterPassDistance;
+
+        bool jumped = false;
+        bus.Launch(worldPlayer.transform, () => jumped = true);
+
+        // Pick a starting weapon while riding, before the jump — the freeze this triggers also
+        // pauses the bus's own flight (Time.deltaTime-driven), resuming once a choice is made.
+        EnsurePlayerSystemsReady();
+        HandleWeaponChoiceIfNeeded();
+
+        yield return new WaitUntil(() => jumped);
+        yield return new WaitUntil(() => !worldPlayer.isSkydiving && worldPlayer.isGrounded);
+
+        Destroy(busObject);
+        BeginCombat();
+
+        // Hand off from the freefall/shoulder view to the tactical top-down view once grounded.
+        SurvivorCameraViewToggle viewToggle = FindFirstObjectByType<SurvivorCameraViewToggle>();
+        viewToggle?.ForceTopDownView();
+    }
+
+    private void BeginCombat()
+    {
+        EnsurePlayerSystemsReady();
+
+        spawner.Initialize(this, config, minigamePlayer.transform, enemyRoot, enemyTemplate);
+        SpawnScopeStructures();
+
+        IsRunning = true;
+        RefreshHud();
+
+        HandleWeaponChoiceIfNeeded();
+    }
+
+    /// <summary>Scatters a handful of basic destructible structures around the player that drop a
+    /// random Scope buff tier when destroyed — pulls the Scope pool straight from config.availableBuffs
+    /// (buffType == CameraZoom) rather than a separate hand-maintained list.</summary>
+    private void SpawnScopeStructures()
+    {
+        List<SurvivorBuffDataSO> scopePool = new List<SurvivorBuffDataSO>();
+        if (config.availableBuffs != null)
+        {
+            foreach (SurvivorBuffDataSO buff in config.availableBuffs)
+            {
+                if (buff != null && buff.buffType == SurvivorBuffType.CameraZoom)
+                    scopePool.Add(buff);
+            }
+        }
+
+        if (scopePool.Count == 0 || worldPlayer == null)
+            return;
+
+        SurvivorBuffDataSO[] pool = scopePool.ToArray();
+        const int structureCount = 6;
+        const float minScatter = 15f;
+        const float maxScatter = 60f;
+
+        for (int i = 0; i < structureCount; i++)
+        {
+            Vector2 randomCircle = Random.insideUnitCircle.normalized * Random.Range(minScatter, maxScatter);
+            Vector3 spawnPosition = worldPlayer.transform.position + new Vector3(randomCircle.x, 0f, randomCircle.y);
+            spawnPosition = SurvivorGroundUtility.SnapToGround(spawnPosition, config.groundMask, config.groundSnapRayHeight, 0.8f);
+
+            GameObject structureObject = new GameObject("SurvivorScopeStructure");
+            structureObject.transform.position = spawnPosition;
+
+            BoxCollider structureCollider = structureObject.AddComponent<BoxCollider>();
+            structureCollider.size = Vector3.one * 1.6f;
+
+            SurvivorScopeStructure structure = structureObject.AddComponent<SurvivorScopeStructure>();
+            structure.Initialize(this, worldPlayer.transform, pool, 40f);
+        }
     }
 
     private void ShowInitialWeaponChoice()
@@ -95,7 +251,8 @@ public class SurvivorMinigameController : MonoBehaviour
                     continue;
 
                 SurvivorWeaponDataSO captured = weapon;
-                choices.Add(new SurvivorUpgradeChoice(weapon.displayName, weapon.description, weapon.weaponColor, c => c.WeaponManager.EquipOrUpgrade(captured)));
+                string levelOneDescription = weapon.GetLevelDescription(1);
+                choices.Add(new SurvivorUpgradeChoice(weapon.displayName, levelOneDescription, weapon.weaponColor, weapon.icon, c => c.WeaponManager.EquipOrUpgrade(captured)));
             }
         }
 
@@ -112,6 +269,8 @@ public class SurvivorMinigameController : MonoBehaviour
             worldPlayer.canMove = false;
             worldPlayer.canLook = false;
         }
+
+        SetMenuMouseUnlocked(true);
     }
 
     private void UnfreezeGameplay()
@@ -124,12 +283,32 @@ public class SurvivorMinigameController : MonoBehaviour
             worldPlayer.canMove = true;
             worldPlayer.canLook = true;
         }
+
+        SetMenuMouseUnlocked(false);
+    }
+
+    /// <summary>Always unlocks the cursor while an upgrade/weapon-choice menu is open, regardless
+    /// of which camera view is active, so its buttons are clickable.</summary>
+    private void SetMenuMouseUnlocked(bool menuOpen)
+    {
+        SurvivorMouseAimRig aimRig = FindFirstObjectByType<SurvivorMouseAimRig>();
+        aimRig?.SetMenuOpen(menuOpen);
     }
 
     private void Update()
     {
         if (!IsRunning || worldPlayer == null)
             return;
+
+        if (roundRules != null)
+        {
+            SurvivorRoundResult? result = roundRules.OnTick(Time.deltaTime);
+            if (result.HasValue)
+            {
+                EndRound(result.Value);
+                return;
+            }
+        }
 
         if (staminaBar != null)
             staminaBar.value = worldPlayer.maxStamina > 0f ? worldPlayer.currentStamina / worldPlayer.maxStamina : 0f;
@@ -141,8 +320,11 @@ public class SurvivorMinigameController : MonoBehaviour
     public int GetCurrentMaxEnemies()
     {
         int level = progression != null ? progression.Level : 1;
-        int scaled = config.baseMaxEnemies + config.maxEnemiesPerLevel * (level - 1);
-        return Mathf.Min(config.maxEnemiesCap, scaled);
+        int levelsPast = level - 1;
+        float scaled = config.baseMaxEnemies
+            + config.maxEnemiesPerLevel * levelsPast
+            + config.maxEnemiesPerLevelSquared * levelsPast * levelsPast;
+        return Mathf.Min(config.maxEnemiesCap, Mathf.RoundToInt(scaled * enemyIntensity));
     }
 
     private void AttachToPlayer(PlayerController player)
@@ -166,20 +348,40 @@ public class SurvivorMinigameController : MonoBehaviour
         killCount++;
         RefreshHud();
 
+        if (roundRules != null)
+        {
+            SurvivorRoundResult? result = roundRules.OnEnemyKilled();
+            if (result.HasValue)
+            {
+                EndRound(result.Value);
+                return;
+            }
+        }
+
         if (config.killsPerBossWave > 0 && !IsBossActive && killCount % config.killsPerBossWave == 0)
             SpawnBoss();
     }
 
-    public void RegisterBossDefeated()
+    public void RegisterBossDefeated(SurvivorBossEnemy boss, int xpReward)
     {
-        IsBossActive = false;
-        progression.AddXP(config.bossXPReward);
+        activeBosses.Remove(boss);
+        progression.AddXP(xpReward);
     }
 
     public void HandlePlayerDefeated()
     {
         if (minigamePlayer == null)
             return;
+
+        if (roundRules != null)
+        {
+            SurvivorRoundResult? result = roundRules.OnPlayerDefeated();
+            if (result.HasValue)
+            {
+                EndRound(result.Value);
+                return;
+            }
+        }
 
         minigamePlayer.Heal(minigamePlayer.MaxHealth);
         minigamePlayer.GrantInvulnerability(2f);
@@ -201,12 +403,49 @@ public class SurvivorMinigameController : MonoBehaviour
         gem.Initialize(this, minigamePlayer.transform, amount, magnetRadius);
     }
 
+    /// <summary>Instantly collects every XP gem currently on the field — the "Loot Magnet" instant item.</summary>
+    public void CollectAllGems()
+    {
+        if (gemRoot == null)
+            return;
+
+        for (int i = gemRoot.childCount - 1; i >= 0; i--)
+        {
+            SurvivorXPGem gem = gemRoot.GetChild(i).GetComponent<SurvivorXPGem>();
+            gem?.ForceCollect();
+        }
+    }
+
+    /// <summary>Damages every current enemy (not the boss) at once — the "Nuke" instant item.</summary>
+    public void NukeAllEnemies(float damage)
+    {
+        if (enemyRoot == null)
+            return;
+
+        for (int i = enemyRoot.childCount - 1; i >= 0; i--)
+        {
+            GameObject enemyObject = enemyRoot.GetChild(i).gameObject;
+            if (enemyObject.GetComponent<ISurvivorDamageable>() == null)
+                continue;
+
+            SurvivorCombatFX.ApplyHit(enemyObject, damage, SurvivorElementType.None, Vector3.zero, 0f);
+        }
+
+        SurvivorCombatFX.Shake(1f);
+    }
+
     private void SpawnBoss()
     {
-        IsBossActive = true;
+        if (config.bossPool == null || config.bossPool.Length == 0)
+            return;
+
+        SurvivorBossDataSO bossData = config.bossPool[Random.Range(0, config.bossPool.Length)];
+        if (bossData == null)
+            return;
+
         EnsureBossTemplate();
 
-        float groundOffset = bossTemplate.transform.localScale.y * 0.5f;
+        float groundOffset = bossData.scale * 0.5f;
         Vector3 spawnOffset = -minigamePlayer.transform.forward * 8f;
         Vector3 spawnPosition = SurvivorGroundUtility.SnapToGround(
             minigamePlayer.transform.position + spawnOffset,
@@ -218,23 +457,11 @@ public class SurvivorMinigameController : MonoBehaviour
         bossObject.SetActive(true);
 
         SurvivorBossEnemy boss = bossObject.GetComponent<SurvivorBossEnemy>();
-        boss.Initialize(
-            this,
-            minigamePlayer.transform,
-            config.bossHealth,
-            config.bossMoveSpeed,
-            config.bossAttackRange,
-            config.bossAttackDamage,
-            config.bossAttackRadius,
-            config.bossTelegraphSeconds,
-            config.bossAttackSeconds,
-            config.bossRecoverSeconds,
-            config.groundMask,
-            config.groundSnapRayHeight,
-            groundOffset);
+        boss.Initialize(this, minigamePlayer.transform, bossData, config.groundMask, config.groundSnapRayHeight, groundOffset);
+        activeBosses.Add(boss);
 
         if (statusText != null)
-            statusText.text = "BOSS INCOMING";
+            statusText.text = $"BOSS INCOMING: {bossData.displayName}";
     }
 
     private void HandleLevelUp(int newLevel)

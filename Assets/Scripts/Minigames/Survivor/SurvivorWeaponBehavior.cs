@@ -29,4 +29,16 @@ public abstract class SurvivorWeaponBehavior : MonoBehaviour
 
     protected abstract void OnInitialize();
     protected abstract void OnStarLevelChanged();
+
+    /// <summary>
+    /// Auto weapons (isManualWeapon = false) always fire on cooldown as before. Manual/"active"
+    /// weapons only fire while left-click is held, unless the player has toggled auto-fire on (E).
+    /// </summary>
+    protected bool CanFire()
+    {
+        if (data == null || !data.isManualWeapon)
+            return true;
+
+        return SurvivorWeaponManager.AutoFireEnabled || Input.GetMouseButton(0);
+    }
 }

@@ -18,7 +18,7 @@ public class SurvivorBoomerangWeapon : SurvivorWeaponBehavior
 
     private void Update()
     {
-        if (controller == null || !controller.IsRunning || controller.IsPaused)
+        if (controller == null || !controller.IsRunning || controller.IsPaused || !CanFire())
             return;
 
         SurvivorWeaponStarStats stats = data.GetStats(starLevel);
@@ -112,7 +112,7 @@ public class SurvivorBoomerangWeapon : SurvivorWeaponBehavior
         if (renderer != null)
             renderer.material.color = data.weaponColor;
 
-        projectileObject.AddComponent<SurvivorBoomerangProjectile>().Launch(transform, direction, speed, damage);
+        projectileObject.AddComponent<SurvivorBoomerangProjectile>().Launch(transform, direction, speed, damage, data.element, data.knockbackForce);
     }
 }
 
@@ -122,16 +122,20 @@ public class SurvivorBoomerangProjectile : MonoBehaviour
     private Vector3 direction;
     private float speed;
     private float damage;
+    private SurvivorElementType element;
+    private float knockbackForce;
     private float outboundTimer = 0.45f;
     private bool returning;
     private float lifetime = 3f;
 
-    public void Launch(Transform ownerTransform, Vector3 travelDirection, float travelSpeed, float hitDamage)
+    public void Launch(Transform ownerTransform, Vector3 travelDirection, float travelSpeed, float hitDamage, SurvivorElementType hitElement, float force)
     {
         owner = ownerTransform;
         direction = travelDirection;
         speed = travelSpeed;
         damage = hitDamage;
+        element = hitElement;
+        knockbackForce = force;
     }
 
     private void Update()
@@ -167,7 +171,9 @@ public class SurvivorBoomerangProjectile : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        ISurvivorDamageable target = other.GetComponent<ISurvivorDamageable>();
-        target?.TakeDamage(damage);
+        if (other.GetComponent<ISurvivorDamageable>() == null)
+            return;
+
+        SurvivorCombatFX.ApplyHit(other.gameObject, damage, element, direction, knockbackForce);
     }
 }

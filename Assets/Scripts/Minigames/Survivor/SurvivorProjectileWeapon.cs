@@ -18,7 +18,7 @@ public class SurvivorProjectileWeapon : SurvivorWeaponBehavior
 
     private void Update()
     {
-        if (controller == null || !controller.IsRunning || controller.IsPaused)
+        if (controller == null || !controller.IsRunning || controller.IsPaused || !CanFire())
             return;
 
         fireTimer -= Time.deltaTime;
@@ -110,7 +110,7 @@ public class SurvivorProjectileWeapon : SurvivorWeaponBehavior
         if (renderer != null)
             renderer.material.color = data.weaponColor;
 
-        projectileObject.AddComponent<SurvivorProjectile>().Launch(direction, speed, damage);
+        projectileObject.AddComponent<SurvivorProjectile>().Launch(direction, speed, damage, data.element, data.knockbackForce);
     }
 }
 
@@ -119,13 +119,17 @@ public class SurvivorProjectile : MonoBehaviour
     private Vector3 direction;
     private float speed;
     private float damage;
+    private SurvivorElementType element;
+    private float knockbackForce;
     private float lifetime = 2.5f;
 
-    public void Launch(Vector3 travelDirection, float travelSpeed, float hitDamage)
+    public void Launch(Vector3 travelDirection, float travelSpeed, float hitDamage, SurvivorElementType hitElement = SurvivorElementType.None, float force = 0f)
     {
         direction = travelDirection;
         speed = travelSpeed;
         damage = hitDamage;
+        element = hitElement;
+        knockbackForce = force;
     }
 
     private void Update()
@@ -139,11 +143,10 @@ public class SurvivorProjectile : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        ISurvivorDamageable target = other.GetComponent<ISurvivorDamageable>();
-        if (target == null)
+        if (other.GetComponent<ISurvivorDamageable>() == null)
             return;
 
-        target.TakeDamage(damage);
+        SurvivorCombatFX.ApplyHit(other.gameObject, damage, element, direction, knockbackForce);
         Destroy(gameObject);
     }
 }

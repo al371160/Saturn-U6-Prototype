@@ -69,6 +69,31 @@ public class PlayerController : MonoBehaviour
 
     private bool isGliding = false;
 
+    [Header("Skydive (battle bus jump)")]
+    [Tooltip("Fall speed the skydive gradually decelerates/accelerates towards, distinct from glide's instant clamp.")]
+    public float skydiveTerminalVelocity = -14f;
+    [Tooltip("How quickly vertical speed approaches skydiveTerminalVelocity, in units/sec^2.")]
+    public float skydiveVerticalDrag = 6f;
+    [Tooltip("How quickly the initial horizontal momentum from the bus bleeds off, in units/sec^2.")]
+    public float skydiveHorizontalDrag = 2f;
+    public bool isSkydiving = false;
+    private Vector3 skydiveHorizontalVelocity;
+    private float skydiveVisualYaw;
+    private float skydiveVisualPitch;
+
+    [Tooltip("True while riding the battle bus. Update() does nothing at all in this state — " +
+        "the player's world position is fully governed by being parented to the bus transform, " +
+        "so no gravity/movement/physics can ever displace them off the plane before they jump.")]
+    public bool isRidingBus = false;
+
+    [Header("Freefall Glide (camera-steered, post-bus-jump)")]
+    [Tooltip("Optional — when assigned, freefall becomes a fast camera-steered glide: pitch the " +
+        "camera down to dive steeper (more fall speed, less horizontal), or level it out for a " +
+        "flatter, faster horizontal glide. Falls back to the old simple momentum-decay fall if unassigned.")]
+    public SurvivorMouseAimRig aimRig;
+    [Tooltip("Total glide speed budget (the vertical/horizontal split is determined by camera pitch); as fast as the fall itself, per design.")]
+    public float glideTotalSpeed = 45f;
+
     [Header("Stamina")]
     public float maxStamina = 100f;
     public float currentStamina = 100f;
@@ -100,8 +125,6 @@ public class PlayerController : MonoBehaviour
     public bool canMove = true;
 
     private bool isSprinting = false;
-
-    private Vector3 hitPoint;
 
     [Header("Climbing")]
     public LayerMask climbableMask;
@@ -152,15 +175,19 @@ public class PlayerController : MonoBehaviour
 
 
     [Header("Mouse Rotation")]
-    public LayerMask mouseAimMask = ~0; // Add this to specify what the raycast should hit
     public float rotateMultiplier = 10f;
     public Collider raycastTargetCollider; // Collider to exclude from ragdoll collisions
-    
+
+    private float lookYaw;
+
 
     void Start()
     {
         //Cursor.lockState = CursorLockMode.Locked;
         //Cursor.visible = false;
+        if (aimRig == null)
+            aimRig = FindFirstObjectByType<SurvivorMouseAimRig>();
+
         swimming = GetComponent<PlayerSwimming>();
         if (leftGlideTrail != null) leftGlideTrail.emitting = false;
         if (rightGlideTrail != null) rightGlideTrail.emitting = false;
@@ -175,16 +202,29 @@ public class PlayerController : MonoBehaviour
 
         SetRagdoll(false);
 
+        lookYaw = transform.eulerAngles.y;
     }
 
     void Update()
     {
+        // 0. RIDING THE BATTLE BUS: do absolutely nothing — position is fully owned by the
+        // parent (bus) transform until JumpOff() explicitly releases us.
+        if (isRidingBus)
+            return;
+
         // 1. ROTATION: Always try to rotate first unless physically a ragdoll
         // This fixes the issue where you couldn't look around at the start.
         if (canLook)
         {
             RotateTowardsMousePoint();
             Debug.Log("canLook: " + canLook);
+        }
+
+        // 1.5 SKYDIVE STATE: falling from the battle bus, overrides normal movement/look
+        if (isSkydiving)
+        {
+            UpdateSkydive();
+            return;
         }
 
         // 2. RAGDOLL STATE: If ragdolling, skip everything else
@@ -287,9 +327,9 @@ public class PlayerController : MonoBehaviour
             playerAnim.SetBool("isSprinting", false);
         }
 
-        // Movement
+        // Movement (camera-relative, so "forward" always means "into the current view")
         RaycastHit hit;
-        Vector3 moveDir = transform.forward * vertical + transform.right * horizontal;
+        Vector3 moveDir = GetCameraRelativeMoveDirection(horizontal, vertical);
         if (Physics.Raycast(transform.position, moveDir.normalized, out hit, 1f, groundMask))
         {
             float angle = Vector3.Angle(hit.normal, Vector3.up);
@@ -704,39 +744,54 @@ public class PlayerController : MonoBehaviour
 
     public bool canLook = true; // Add this to your player class if not already present
 
+    /// <summary>
+    /// Turns the player to face the current arrow-key/WASD movement direction, resolved relative
+    /// to the active camera (so "forward" always means "into the current view", regardless of which
+    /// way the mouse-controlled camera is currently facing). Holds the last facing when there's no
+    /// movement input.
+    /// </summary>
     private void RotateTowardsMousePoint()
     {
-        Debug.Log("rotating...");
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        Debug.Log("ray exists");
+        if (isGliding)
+            rotateMultiplier = 3f;
+        else if (swimming != null && swimming.IsSwimming())
+            rotateMultiplier = 5f; // slower turn in water
+        else
+            rotateMultiplier = 10f;
 
-        if (Physics.Raycast(ray, out RaycastHit hit, 100f, mouseAimMask)) // Limit to 100 units and filtered mask
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
+        Vector3 moveDir = GetCameraRelativeMoveDirection(horizontal, vertical);
+
+        if (moveDir.sqrMagnitude > 0.01f)
+            lookYaw = Quaternion.LookRotation(moveDir).eulerAngles.y;
+
+        Quaternion targetRotation = Quaternion.Euler(0f, lookYaw, 0f);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotateMultiplier);
+    }
+
+    /// <summary>
+    /// Projects raw horizontal/vertical input onto the current camera's forward/right (flattened to
+    /// the horizontal plane), so movement always matches what's on screen instead of a fixed world
+    /// axis. Falls back to world axes if there's no active camera.
+    /// </summary>
+    private Vector3 GetCameraRelativeMoveDirection(float horizontal, float vertical)
+    {
+        Vector3 camForward = Vector3.forward;
+        Vector3 camRight = Vector3.right;
+
+        if (Camera.main != null)
         {
-            Debug.Log("ray hit");
-            Vector3 direction = hit.point - transform.position;
-            direction.y = 0f; // Keep rotation level
+            camForward = Camera.main.transform.forward;
+            camForward.y = 0f;
+            camForward.Normalize();
 
-            if (direction.sqrMagnitude > 0.01f)
-            {
-                if (isGliding)
-                {
-                    rotateMultiplier = 3f;
-                }
-                else if (swimming != null && swimming.IsSwimming())
-                {
-                    rotateMultiplier = 5f; // slower turn in water
-                }
-                else
-                {
-                    rotateMultiplier = 10f;
-                }
-
-                Quaternion targetRotation = Quaternion.LookRotation(direction);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotateMultiplier);
-            }
-
-            hitPoint = hit.point; // Save for visual debugging or other uses
+            camRight = Camera.main.transform.right;
+            camRight.y = 0f;
+            camRight.Normalize();
         }
+
+        return camForward * vertical + camRight * horizontal;
     }
 
 
@@ -766,6 +821,81 @@ public class PlayerController : MonoBehaviour
     public void ChangeMaxStamina(int input)
     {
         maxStamina = maxStamina + input;
+    }
+
+    /// <summary>Called by the battle bus when the player jumps off, with the bus's current travel velocity.</summary>
+    public void BeginSkydive(Vector3 initialHorizontalVelocity)
+    {
+        isSkydiving = true;
+        canMove = true;
+        skydiveHorizontalVelocity = initialHorizontalVelocity;
+        velocity = Vector3.zero;
+        isGrounded = false;
+
+        // Seed the smoothed visual yaw/pitch from wherever the camera already is, so the very
+        // first skydive frame doesn't snap/blend from the bus's (unrelated) travel-direction yaw.
+        if (aimRig != null)
+        {
+            skydiveVisualYaw = aimRig.CameraYaw;
+            skydiveVisualPitch = aimRig.CameraPitch;
+        }
+        else
+        {
+            skydiveVisualYaw = transform.eulerAngles.y;
+            skydiveVisualPitch = 0f;
+        }
+    }
+
+    private void UpdateSkydive()
+    {
+        Vector3 totalVelocity;
+
+        if (aimRig != null)
+        {
+            // Camera-steered glide: pitching the camera down/up trades vertical fall speed for
+            // horizontal distance (and vice versa), Fortnite-freefall-style. Total speed stays
+            // constant (glideTotalSpeed) — only the vertical/horizontal split changes with pitch.
+            float pitchRad = aimRig.CameraPitch * Mathf.Deg2Rad;
+            float yawRad = aimRig.CameraYaw * Mathf.Deg2Rad;
+
+            float verticalSpeed = -Mathf.Sin(pitchRad) * glideTotalSpeed;
+            float horizontalSpeed = Mathf.Cos(pitchRad) * glideTotalSpeed;
+            Vector3 flatForward = new Vector3(Mathf.Sin(yawRad), 0f, Mathf.Cos(yawRad));
+
+            totalVelocity = flatForward * horizontalSpeed + Vector3.up * verticalSpeed;
+            velocity.y = verticalSpeed;
+
+            // Face the dive direction by independently smoothing yaw and pitch and rebuilding the
+            // rotation directly (roll always exactly 0). A single Quaternion.Slerp across two
+            // orientations that differ in both yaw AND pitch at once can pass through intermediate
+            // orientations with visible roll/lean even though neither endpoint has any — that was
+            // the cause of the character looking tilted/rotated sideways during the glide.
+            skydiveVisualYaw = Mathf.LerpAngle(skydiveVisualYaw, aimRig.CameraYaw, Time.deltaTime * 4f);
+            skydiveVisualPitch = Mathf.LerpAngle(skydiveVisualPitch, aimRig.CameraPitch, Time.deltaTime * 4f);
+            transform.rotation = Quaternion.Euler(skydiveVisualPitch, skydiveVisualYaw, 0f);
+        }
+        else
+        {
+            // Fallback (no aim rig wired, e.g. base Campaign use): simple momentum decay.
+            velocity.y = Mathf.MoveTowards(velocity.y, skydiveTerminalVelocity, skydiveVerticalDrag * Time.deltaTime);
+            skydiveHorizontalVelocity = Vector3.MoveTowards(skydiveHorizontalVelocity, Vector3.zero, skydiveHorizontalDrag * Time.deltaTime);
+            totalVelocity = skydiveHorizontalVelocity + Vector3.up * velocity.y;
+
+            if (totalVelocity.sqrMagnitude > 0.01f)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(totalVelocity.normalized);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 4f);
+            }
+        }
+
+        controller.Move(totalVelocity * Time.deltaTime);
+
+        // Exit skydiving either by choice (glide input, same button as the existing wingsuit glide)
+        // or automatically once close to the ground — the normal gravity/glide Update() path takes
+        // over from there using the vertical speed already carried in `velocity`.
+        bool nearGround = groundCheck != null && Physics.CheckSphere(groundCheck.position, groundDistance * 5f, groundMask);
+        if (Input.GetButton("Jump") || nearGround)
+            isSkydiving = false;
     }
 
     private void StartRagdoll()
@@ -863,6 +993,7 @@ public class PlayerController : MonoBehaviour
         canLook = true;
         freeToMove = true;
         isExhaustedFall = false;
+        lookYaw = transform.eulerAngles.y;
 
         // STEP 6: Reset velocity
         velocity = Vector3.zero;

@@ -32,6 +32,7 @@ public void StartDialogue(DialogueNodeSO node, DialogueTrigger trigger, bool res
     playerAnim.SetBool("isIdle", true);
     StopAllCoroutines();
     playerController.canMove = false;
+    SetInteractionZoom(true);
 
     DialogueNodeSO nodeToStart = node;
 
@@ -176,6 +177,16 @@ public void StartDialogue(DialogueNodeSO node, DialogueTrigger trigger, bool res
 
         playerAnim.SetBool("isIdle", false);
         playerController.canMove = true;
+        SetInteractionZoom(false);
+    }
+
+    /// <summary>Forces the Survivor camera rig(s) to zoom in close for dialogue/sign interaction,
+    /// bypassing whatever scope-buff zoom is currently active, and restores it afterward. No-op
+    /// outside the Survivor scene (Campaign has no SurvivorFollowCameraRig instances).</summary>
+    private void SetInteractionZoom(bool active)
+    {
+        foreach (SurvivorFollowCameraRig rig in FindObjectsByType<SurvivorFollowCameraRig>(FindObjectsSortMode.None))
+            rig.SetInteractionZoom(active);
     }
 
 

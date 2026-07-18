@@ -13,6 +13,8 @@ public class SurvivorMinigamePlayer : MonoBehaviour
     private float baseStaminaRegenRate;
     private float moveSpeedMultiplier = 1f;
     private float staminaRegenMultiplier = 1f;
+    private float cameraZoomMultiplier = 1f;
+    private float highestScopeMagnitude;
 
     public float CurrentHealth => currentHealth;
     public float MaxHealth => (config != null ? config.playerMaxHealth : 100f) + maxHealthBonus;
@@ -37,6 +39,8 @@ public class SurvivorMinigamePlayer : MonoBehaviour
         maxHealthBonus = 0f;
         moveSpeedMultiplier = 1f;
         staminaRegenMultiplier = 1f;
+        cameraZoomMultiplier = 1f;
+        highestScopeMagnitude = 0f;
         HealthRegenPerSecond = 0f;
         DamageReductionPercent = 0f;
         MagnetRadiusBonus = 0f;
@@ -92,6 +96,17 @@ public class SurvivorMinigamePlayer : MonoBehaviour
         MagnetRadiusBonus += amount;
     }
 
+    // Scopes don't stack (surviv.io-style) — only the strongest one the player currently holds
+    // is effective, so picking up a 2x after an 8x is a no-op rather than extra zoom.
+    public void ApplyCameraZoomBonus(float percent)
+    {
+        highestScopeMagnitude = Mathf.Max(highestScopeMagnitude, percent);
+        cameraZoomMultiplier = 1f + highestScopeMagnitude;
+
+        foreach (SurvivorFollowCameraRig rig in FindObjectsByType<SurvivorFollowCameraRig>(FindObjectsSortMode.None))
+            rig.SetZoomMultiplier(cameraZoomMultiplier);
+    }
+
     public void ApplyBonusXPPerKill(int amount)
     {
         BonusXPPerKill += amount;
@@ -136,6 +151,20 @@ public class SurvivorMinigamePlayer : MonoBehaviour
             return;
 
         contactCooldown = config.contactDamageCooldown;
+        currentHealth -= amount * (1f - DamageReductionPercent);
+        controller.RefreshHud();
+
+        if (currentHealth <= 0f)
+            controller.HandlePlayerDefeated();
+    }
+
+    /// <summary>Storm-zone damage tick — unlike TakeContactDamage, not gated by the contact-damage
+    /// cooldown, since the storm should reliably tick every second regardless of recent enemy hits.</summary>
+    public void TakeStormDamage(float amount)
+    {
+        if (controller == null || !controller.IsRunning)
+            return;
+
         currentHealth -= amount * (1f - DamageReductionPercent);
         controller.RefreshHud();
 

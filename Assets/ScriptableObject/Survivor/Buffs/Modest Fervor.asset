@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buffId: modest_fervor
   displayName: Modest Fervor
-  description: +14% weapon attack speed
+  description: +11% weapon attack speed
   iconColor: {r: 1, g: 0.6, b: 0.2, a: 1}
+  icon: {fileID: 21300000, guid: cbba8291647d343b2890a34989764d8f, type: 3}
   buffType: 3
-  magnitude: 0.14
+  magnitude: 0.114999995

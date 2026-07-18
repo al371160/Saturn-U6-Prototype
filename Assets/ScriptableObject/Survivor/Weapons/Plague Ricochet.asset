@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 467ce64649870466aab1158c6651ec73, type: 3}
+  m_Name: Plague Ricochet
+  m_EditorClassIdentifier: 
+  weaponId: plague_ricochet
+  displayName: Plague Ricochet
+  description: Plague Ricochet.
+  weaponType: 6
+  meleePattern: 0
+  weaponColor: {r: 0.4, g: 0.85, b: 0.3, a: 1}
+  icon: {fileID: 21300000, guid: be240ea579f064097a901b460778d77c, type: 3}
+  hitRadius: 0.35
+  isManualWeapon: 0
+  element: 5
+  knockbackForce: 1
+  starStats:
+  - damage: 12
+    rate: 0.95
+    range: 13
+    count: 1
+    secondaryValue: 3
+  - damage: 15.5
+    rate: 0.92
+    range: 13.4
+    count: 1
+    secondaryValue: 3.3
+  - damage: 19
+    rate: 0.89
+    range: 13.8
+    count: 2
+    secondaryValue: 3.6
+  - damage: 22.5
+    rate: 0.86
+    range: 14.2
+    count: 2
+    secondaryValue: 3.9
+  - damage: 26
+    rate: 0.83
+    range: 14.6
+    count: 3
+    secondaryValue: 4.2
+  - damage: 29.5
+    rate: 0.8
+    range: 15
+    count: 3
+    secondaryValue: 4.5
+  evolvesInto: {fileID: 0}

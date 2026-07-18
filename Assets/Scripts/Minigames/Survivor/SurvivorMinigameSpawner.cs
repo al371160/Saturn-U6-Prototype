@@ -80,7 +80,11 @@ public class SurvivorMinigameSpawner : MonoBehaviour
             config.enemyXPDrop,
             config.groundMask,
             config.groundSnapRayHeight,
-            groundOffset);
+            groundOffset,
+            config.groundSnapInterval);
+
+        if (controller.enemyEliteness > 0f && Random.value < controller.enemyEliteness)
+            enemy.MakeElite();
     }
 
     private void DespawnStragglers()

@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buffId: greater_allure
   displayName: Greater Allure
-  description: +2.8 pickup magnet radius
+  description: +2.9 pickup magnet radius
   iconColor: {r: 0.9, g: 0.75, b: 0.3, a: 1}
+  icon: {fileID: 21300000, guid: d3cba805b616a4ae7a1eb08185d4f69d, type: 3}
   buffType: 6
-  magnitude: 2.8
+  magnitude: 2.9

@@ -70,7 +70,16 @@ public class SurvivorLevelUpUI : MonoBehaviour
         GameObject iconObject = new GameObject("Icon");
         iconObject.transform.SetParent(buttonObject.transform, false);
         Image icon = iconObject.AddComponent<Image>();
-        icon.color = choice.IconColor;
+        if (choice.Icon != null)
+        {
+            icon.sprite = choice.Icon;
+            icon.color = Color.white;
+            icon.preserveAspect = true;
+        }
+        else
+        {
+            icon.color = choice.IconColor;
+        }
         RectTransform iconRect = iconObject.GetComponent<RectTransform>();
         iconRect.anchorMin = new Vector2(0.5f, 1f);
         iconRect.anchorMax = new Vector2(0.5f, 1f);

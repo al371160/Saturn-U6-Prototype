@@ -9,6 +9,17 @@ public class SurvivorWeaponManager : MonoBehaviour
 
     public IReadOnlyCollection<SurvivorWeaponBehavior> EquippedWeapons => equippedWeapons.Values;
 
+    /// <summary>Toggled with E. While on, manual/"active" weapons fire on their own cooldown like
+    /// auto weapons do; while off, they only fire while left-click is held.</summary>
+    public static bool AutoFireEnabled { get; private set; }
+    public KeyCode autoFireToggleKey = KeyCode.E;
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(autoFireToggleKey))
+            AutoFireEnabled = !AutoFireEnabled;
+    }
+
     /// <summary>Global multipliers layered on top of every weapon's own star-based stats, driven by buffs.</summary>
     public float DamageMultiplier { get; private set; } = 1f;
     public float RateMultiplier { get; private set; } = 1f;
@@ -61,15 +72,38 @@ public class SurvivorWeaponManager : MonoBehaviour
         return data != null && equippedWeapons.ContainsKey(data.weaponId);
     }
 
+    /// <summary>0 if not yet equipped, otherwise the weapon's current star level.</summary>
+    public int GetStarLevel(SurvivorWeaponDataSO data)
+    {
+        if (data != null && equippedWeapons.TryGetValue(data.weaponId, out SurvivorWeaponBehavior weapon))
+            return weapon.StarLevel;
+
+        return 0;
+    }
+
     public bool CanUpgrade(SurvivorWeaponDataSO data)
     {
         if (data == null)
             return false;
 
         if (equippedWeapons.TryGetValue(data.weaponId, out SurvivorWeaponBehavior weapon))
-            return !weapon.IsMaxStar || data.evolvesInto != null;
+            return !weapon.IsMaxStar || HasAvailableBranch(data, weapon.StarLevel);
 
         return true;
+    }
+
+    private static bool HasAvailableBranch(SurvivorWeaponDataSO data, int currentStar)
+    {
+        if (data.evolutionOptions == null)
+            return false;
+
+        foreach (SurvivorWeaponEvolutionOption option in data.evolutionOptions)
+        {
+            if (option.targetWeapon != null && currentStar >= option.requiredStar)
+                return true;
+        }
+
+        return false;
     }
 
     public void EquipOrUpgrade(SurvivorWeaponDataSO data)
@@ -79,7 +113,7 @@ public class SurvivorWeaponManager : MonoBehaviour
 
         if (equippedWeapons.TryGetValue(data.weaponId, out SurvivorWeaponBehavior weapon))
         {
-            UpgradeWeapon(weapon, data);
+            UpgradeWeapon(weapon);
             return;
         }
 
@@ -88,20 +122,27 @@ public class SurvivorWeaponManager : MonoBehaviour
         equippedWeapons[data.weaponId] = newWeapon;
     }
 
-    private void UpgradeWeapon(SurvivorWeaponBehavior weapon, SurvivorWeaponDataSO data)
+    /// <summary>Replaces an equipped weapon with a specific evolution branch target — called from a
+    /// branch choice's own callback (SurvivorUpgradePool), not the generic EquipOrUpgrade path, since
+    /// a weapon can have several available branches and the player picks exactly one.</summary>
+    public void EvolveWeapon(SurvivorWeaponDataSO fromData, SurvivorWeaponDataSO targetData)
     {
-        if (!weapon.IsMaxStar)
-        {
-            weapon.SetStarLevel(weapon.StarLevel + 1);
+        if (fromData == null || targetData == null)
             return;
+
+        if (equippedWeapons.TryGetValue(fromData.weaponId, out SurvivorWeaponBehavior weapon))
+        {
+            equippedWeapons.Remove(fromData.weaponId);
+            Destroy(weapon.gameObject);
         }
 
-        if (data.evolvesInto == null)
-            return;
+        EquipOrUpgrade(targetData);
+    }
 
-        equippedWeapons.Remove(data.weaponId);
-        Destroy(weapon.gameObject);
-        EquipOrUpgrade(data.evolvesInto);
+    private void UpgradeWeapon(SurvivorWeaponBehavior weapon)
+    {
+        if (!weapon.IsMaxStar)
+            weapon.SetStarLevel(weapon.StarLevel + 1);
     }
 
     private SurvivorWeaponBehavior CreateWeaponBehavior(SurvivorWeaponDataSO data)
@@ -120,6 +161,20 @@ public class SurvivorWeaponManager : MonoBehaviour
                 return weaponObject.AddComponent<SurvivorBoomerangWeapon>();
             case SurvivorWeaponType.Chain:
                 return weaponObject.AddComponent<SurvivorChainWeapon>();
+            case SurvivorWeaponType.Hitscan:
+                return weaponObject.AddComponent<SurvivorHitscanWeapon>();
+            case SurvivorWeaponType.BouncingBullet:
+                return weaponObject.AddComponent<SurvivorBouncingBulletWeapon>();
+            case SurvivorWeaponType.PoisonPool:
+                return weaponObject.AddComponent<SurvivorPoisonPoolWeapon>();
+            case SurvivorWeaponType.Explosive:
+                return weaponObject.AddComponent<SurvivorExplosiveWeapon>();
+            case SurvivorWeaponType.Homing:
+                return weaponObject.AddComponent<SurvivorHomingWeapon>();
+            case SurvivorWeaponType.Drone:
+                return weaponObject.AddComponent<SurvivorDroneWeapon>();
+            case SurvivorWeaponType.Melee:
+                return weaponObject.AddComponent<SurvivorMeleeWeapon>();
             case SurvivorWeaponType.Orbit:
             default:
                 return weaponObject.AddComponent<SurvivorOrbitWeapon>();

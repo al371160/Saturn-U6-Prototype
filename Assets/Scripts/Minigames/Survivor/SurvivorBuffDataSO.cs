@@ -13,7 +13,8 @@ public enum SurvivorBuffType
     Armor,
     MaxStamina,
     StaminaRegen,
-    Fortune
+    Fortune,
+    CameraZoom
 }
 
 [CreateAssetMenu(menuName = "Minigames/Survivor Buff")]
@@ -25,17 +26,20 @@ public class SurvivorBuffDataSO : ScriptableObject
     [TextArea]
     public string description;
     public Color iconColor = Color.white;
+    public Sprite icon;
 
     [Header("Effect")]
     public SurvivorBuffType buffType;
     [Tooltip("Meaning depends on buffType: flat amount (MaxHealth/HealthRegen/MagnetRadius/MaxStamina/Fortune) " +
-        "or a fraction like 0.1 = +10% (MoveSpeed/WeaponDamage/WeaponAttackSpeed/WeaponArea/XPGain/Armor/StaminaRegen).")]
+        "or a fraction like 0.1 = +10% (MoveSpeed/WeaponDamage/WeaponAttackSpeed/WeaponArea/XPGain/Armor/StaminaRegen/CameraZoom).")]
     public float magnitude;
 
     public void Apply(SurvivorMinigameController controller)
     {
         if (controller == null)
             return;
+
+        controller.RecordBuffAcquired(this);
 
         SurvivorMinigamePlayer player = controller.MinigamePlayer;
         SurvivorWeaponManager weapons = controller.WeaponManager;
@@ -78,6 +82,9 @@ public class SurvivorBuffDataSO : ScriptableObject
                 break;
             case SurvivorBuffType.Fortune:
                 player?.ApplyBonusXPPerKill(Mathf.RoundToInt(magnitude));
+                break;
+            case SurvivorBuffType.CameraZoom:
+                player?.ApplyCameraZoomBonus(magnitude);
                 break;
         }
     }

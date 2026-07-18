@@ -104,17 +104,20 @@ public class SurvivorOrbitWeapon : SurvivorWeaponBehavior
                 continue;
 
             hitCooldowns[target] = now + HitInterval;
-            DamageEnemy(target);
+            DealDamage(overlapBuffer[i].gameObject, worldPoint);
         }
     }
 
-    public void DamageEnemy(ISurvivorDamageable target)
+    public void DealDamage(GameObject targetObject, Vector3 sourcePoint)
     {
-        if (target == null || controller == null || !controller.IsRunning)
+        if (targetObject == null || controller == null || !controller.IsRunning)
             return;
 
         float damageMultiplier = controller.WeaponManager != null ? controller.WeaponManager.DamageMultiplier : 1f;
-        target.TakeDamage(damage * damageMultiplier);
+        Vector3 direction = targetObject.transform.position - sourcePoint;
+        direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : transform.forward;
+
+        SurvivorCombatFX.ApplyHit(targetObject, damage * damageMultiplier, data.element, direction, data.knockbackForce);
     }
 
     private void ClearOrbitNodes()
@@ -148,8 +151,7 @@ public class SurvivorOrbitHitbox : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        ISurvivorDamageable target = other.GetComponent<ISurvivorDamageable>();
-        if (target != null)
-            weapon.DamageEnemy(target);
+        if (other.GetComponent<ISurvivorDamageable>() != null)
+            weapon.DealDamage(other.gameObject, transform.position);
     }
 }

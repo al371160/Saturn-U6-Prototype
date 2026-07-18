@@ -39,35 +39,41 @@ public class SurvivorMinigameConfig : ScriptableObject
     public float enemyMoveSpeed = 2.5f;
     public float enemyHealth = 40f;
     public float enemyContactDamage = 12f;
-    public float spawnInterval = 1.8f;
-    public float minSpawnInterval = 0.6f;
+    public float spawnInterval = 0.9f;
+    public float minSpawnInterval = 0.3f;
     [Tooltip("Ring distance around the player where new enemies spawn.")]
-    public float spawnRadius = 14f;
+    public float spawnRadius = 22f;
     [Tooltip("Max concurrent enemies allowed at level 1.")]
-    public int baseMaxEnemies = 10;
-    [Tooltip("Extra concurrent-enemy cap allowed per player level.")]
-    public int maxEnemiesPerLevel = 2;
+    public int baseMaxEnemies = 20;
+    [Tooltip("Linear growth in concurrent-enemy cap per player level.")]
+    public float maxEnemiesPerLevel = 8f;
+    [Tooltip("Quadratic growth in concurrent-enemy cap per player level, for the late-game surge toward hundreds of enemies.")]
+    public float maxEnemiesPerLevelSquared = 0.55f;
     [Tooltip("Hard ceiling on concurrent enemies, regardless of level.")]
-    public int maxEnemiesCap = 30;
+    public int maxEnemiesCap = 320;
     [Tooltip("Enemies farther than this from the player are despawned, so stragglers don't pile up behind you.")]
-    public float enemyDespawnDistance = 45f;
+    public float enemyDespawnDistance = 60f;
+    [Tooltip("Seconds between ground-snap re-checks per enemy, staggered by instance, to keep hundreds of enemies cheap.")]
+    public float groundSnapInterval = 0.2f;
 
     [Header("Boss Waves")]
     [Tooltip("A boss spawns every this many kills. Set to 0 to disable boss waves.")]
     public int killsPerBossWave = 15;
-    public float bossHealth = 600f;
-    public float bossMoveSpeed = 3.2f;
-    public float bossAttackRange = 3f;
-    public float bossAttackDamage = 30f;
-    public float bossAttackRadius = 2.5f;
-    public float bossTelegraphSeconds = 0.8f;
-    public float bossAttackSeconds = 0.25f;
-    public float bossRecoverSeconds = 1.2f;
-    [Tooltip("Bonus XP awarded for defeating a boss.")]
-    public int bossXPReward = 50;
+    [Tooltip("Data-driven boss pool — each spawn picks one at random, so repeated waves see variety rather than the same single boss every time.")]
+    public SurvivorBossDataSO[] bossPool;
 
     [Header("Terrain")]
     [Tooltip("Layer(s) considered ground, used to keep spawned enemies/bosses snapped to terrain height.")]
     public LayerMask groundMask;
     public float groundSnapRayHeight = 50f;
+
+    [Header("Battle Bus (Multiplayer round entry)")]
+    [Tooltip("Off by default so single-player/Campaign testing is unaffected. Enable for the Multiplayer round-entry flow.")]
+    public bool useBattleBusIntro = false;
+    [Tooltip("Half-width of the square region (centered on world origin) the bus's straight path is randomized across.")]
+    public float busPathHalfExtent = 900f;
+    public float busFlightAltitude = 160f;
+    public float busFlightDuration = 25f;
+    [Tooltip("The flight line's closest approach to the map center is randomized within this distance.")]
+    public float busCenterPassDistance = 80f;
 }

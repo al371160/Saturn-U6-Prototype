@@ -13,5 +13,14 @@ MonoBehaviour:
   m_Name: Shell
   m_EditorClassIdentifier: 
   itemName: Shell
+  usable: 0
+  important: 0
+  icon: {fileID: 21300000, guid: a75611515cad24b3db022752c4eca827, type: 3}
+  description: 
+  pickupSound: {fileID: 0}
   statToChange: 1
   amountToChangeStat: 1
+  suitMaxWeight: 10
+  suitMaxAltitude: 50
+  suitMaxSpeed: 8
+  requiredMinigame: 0

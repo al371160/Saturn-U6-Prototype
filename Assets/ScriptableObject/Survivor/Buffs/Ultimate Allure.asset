@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buffId: ultimate_allure
   displayName: Ultimate Allure
-  description: +4.3 pickup magnet radius
+  description: +3.6 pickup magnet radius
   iconColor: {r: 0.9, g: 0.75, b: 0.3, a: 1}
+  icon: {fileID: 21300000, guid: d3cba805b616a4ae7a1eb08185d4f69d, type: 3}
   buffType: 6
-  magnitude: 4.3
+  magnitude: 3.6

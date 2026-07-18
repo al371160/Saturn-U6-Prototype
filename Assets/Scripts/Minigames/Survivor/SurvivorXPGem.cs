@@ -42,4 +42,10 @@ public class SurvivorXPGem : MonoBehaviour
         controller.Progression?.AddXP(xpValue);
         Destroy(gameObject);
     }
+
+    /// <summary>Bypasses distance/magnet checks — used by the "Loot Magnet" instant item.</summary>
+    public void ForceCollect()
+    {
+        Collect();
+    }
 }

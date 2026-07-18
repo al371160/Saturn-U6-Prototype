@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buffId: solid_vitality
   displayName: Solid Vitality
-  description: +45 max health, full heal
+  description: +43 max health, full heal
   iconColor: {r: 0.9, g: 0.3, b: 0.35, a: 1}
+  icon: {fileID: 21300000, guid: 0a66b911955d14410b349948ce1df6d7, type: 3}
   buffType: 0
-  magnitude: 45
+  magnitude: 43

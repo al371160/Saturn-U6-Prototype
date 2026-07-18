@@ -63,8 +63,13 @@ public class SurvivorAuraWeapon : SurvivorWeaponBehavior
         int hitCount = Physics.OverlapSphereNonAlloc(transform.position, radius, overlapBuffer);
         for (int i = 0; i < hitCount; i++)
         {
-            ISurvivorDamageable target = overlapBuffer[i].GetComponent<ISurvivorDamageable>();
-            target?.TakeDamage(stats.damage * damageMultiplier);
+            GameObject hitObject = overlapBuffer[i].gameObject;
+            if (hitObject.GetComponent<ISurvivorDamageable>() == null)
+                continue;
+
+            Vector3 direction = hitObject.transform.position - transform.position;
+            direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
+            SurvivorCombatFX.ApplyHit(hitObject, stats.damage * damageMultiplier, data.element, direction, data.knockbackForce);
         }
     }
 
