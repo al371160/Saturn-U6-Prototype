@@ -65,6 +65,7 @@ public class SurvivorWeaponManager : MonoBehaviour
         }
 
         equippedWeapons.Clear();
+        controller?.NotifyLoadoutChanged();
     }
 
     public bool IsEquipped(SurvivorWeaponDataSO data)
@@ -114,12 +115,14 @@ public class SurvivorWeaponManager : MonoBehaviour
         if (equippedWeapons.TryGetValue(data.weaponId, out SurvivorWeaponBehavior weapon))
         {
             UpgradeWeapon(weapon);
+            controller.NotifyLoadoutChanged();
             return;
         }
 
         SurvivorWeaponBehavior newWeapon = CreateWeaponBehavior(data);
         newWeapon.Initialize(controller, data, 1);
         equippedWeapons[data.weaponId] = newWeapon;
+        controller.NotifyLoadoutChanged();
     }
 
     /// <summary>Replaces an equipped weapon with a specific evolution branch target — called from a

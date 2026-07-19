@@ -61,11 +61,20 @@ public class SurvivorMinigameSpawner : MonoBehaviour
         if (randomCircle.sqrMagnitude < 0.01f)
             randomCircle = Vector2.right;
 
-        float groundOffset = enemyTemplate.transform.localScale.y * 0.5f;
-
         Vector3 spawnOffset = new Vector3(randomCircle.x, 0f, randomCircle.y) * config.spawnRadius;
-        Vector3 spawnPosition = player.position + spawnOffset;
-        spawnPosition = SurvivorGroundUtility.SnapToGround(spawnPosition, config.groundMask, config.groundSnapRayHeight, groundOffset);
+        SpawnEnemyAt(player.position + spawnOffset);
+    }
+
+    /// <summary>Spawns one standard enemy at a world position (ground-snapped). Used by ring
+    /// spawning and by structure encounter spawners.</summary>
+    public SurvivorMinigameEnemy SpawnEnemyAt(Vector3 worldPosition, bool allowElite = true)
+    {
+        if (controller == null || config == null || enemyTemplate == null || enemyRoot == null)
+            return null;
+
+        float groundOffset = enemyTemplate.transform.localScale.y * 0.5f;
+        Vector3 spawnPosition = SurvivorGroundUtility.SnapToGround(
+            worldPosition, config.groundMask, config.groundSnapRayHeight, groundOffset);
 
         GameObject enemyObject = Instantiate(enemyTemplate, spawnPosition, Quaternion.identity, enemyRoot);
         enemyObject.SetActive(true);
@@ -83,8 +92,10 @@ public class SurvivorMinigameSpawner : MonoBehaviour
             groundOffset,
             config.groundSnapInterval);
 
-        if (controller.enemyEliteness > 0f && Random.value < controller.enemyEliteness)
+        if (allowElite && controller.enemyEliteness > 0f && Random.value < controller.enemyEliteness)
             enemy.MakeElite();
+
+        return enemy;
     }
 
     private void DespawnStragglers()

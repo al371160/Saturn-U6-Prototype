@@ -257,7 +257,26 @@ public class ItemSlot : MonoBehaviour, IPointerClickHandler, IPointerEnterHandle
         }
     }
 
-    private void EmptySlot()
+    /// <summary>Replace slot contents without stacking — used for quiet sync (e.g. Survivor loadout).</summary>
+    public void SetContents(string itemName, int quantity, Sprite itemSprite, string itemDescription)
+    {
+        this.itemName = itemName;
+        this.itemSprite = itemSprite;
+        this.itemDescription = itemDescription;
+        this.quantity = Mathf.Clamp(quantity, 0, maxNumberOfItems > 0 ? maxNumberOfItems : quantity);
+        isFull = maxNumberOfItems > 0 && this.quantity >= maxNumberOfItems;
+
+        if (itemImage != null)
+            itemImage.sprite = itemSprite;
+
+        if (quantityText != null)
+        {
+            quantityText.text = this.quantity.ToString();
+            quantityText.enabled = this.quantity > 0;
+        }
+    }
+
+    public void EmptySlot()
     {
         quantity = 0;
         itemName = "";

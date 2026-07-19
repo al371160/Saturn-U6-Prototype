@@ -50,6 +50,8 @@ public class SurvivorMinigameController : MonoBehaviour
         Time.timeScale = 0f;
         SetMenuMouseUnlocked(true);
 
+        inventorySync?.ClearSynced();
+
         if (statusText != null)
             statusText.text = $"{result.outcome}: {result.reason}";
     }
@@ -65,11 +67,12 @@ public class SurvivorMinigameController : MonoBehaviour
     public SurvivorMinigamePlayer MinigamePlayer => minigamePlayer;
     public SurvivorWeaponManager WeaponManager => weaponManager;
     public SurvivorPlayerProgression Progression => progression;
+    public SurvivorMinigameSpawner EnemySpawner => spawner;
     public Transform enemyRoot;
 
-    /// <summary>Every buff acquired this run and its current stack count, purely for display
-    /// (the inventory UI) — the actual gameplay effect is already baked into the relevant
-    /// stat multipliers by SurvivorBuffDataSO.Apply() when it was picked.</summary>
+    /// <summary>Every buff acquired this run and its current stack count. Mirrored into
+    /// InventoryCanvas via SurvivorInventorySync for display; gameplay effects are applied by
+    /// SurvivorBuffDataSO.Apply() when picked.</summary>
     public IReadOnlyDictionary<SurvivorBuffDataSO, int> AcquiredBuffs => acquiredBuffs;
     private readonly Dictionary<SurvivorBuffDataSO, int> acquiredBuffs = new Dictionary<SurvivorBuffDataSO, int>();
 
@@ -80,6 +83,13 @@ public class SurvivorMinigameController : MonoBehaviour
 
         acquiredBuffs.TryGetValue(buff, out int count);
         acquiredBuffs[buff] = count + 1;
+        NotifyLoadoutChanged();
+    }
+
+    /// <summary>Pushes the current weapon/buff loadout into InventoryCanvas ItemSlots.</summary>
+    public void NotifyLoadoutChanged()
+    {
+        inventorySync?.Refresh();
     }
 
     private SurvivorMinigamePlayer minigamePlayer;
@@ -88,6 +98,7 @@ public class SurvivorMinigameController : MonoBehaviour
     private SurvivorWeaponManager weaponManager;
     private SurvivorPlayerProgression progression;
     private SurvivorLevelUpUI levelUpUI;
+    private SurvivorInventorySync inventorySync;
     private SurvivorMinigameSpawner spawner;
     private GameObject bossTemplate;
     private GameObject xpGemTemplate;
@@ -134,6 +145,9 @@ public class SurvivorMinigameController : MonoBehaviour
         if (playerSystemsReady)
             return;
         playerSystemsReady = true;
+
+        // Drop any leftover run-synced entries before equipping this run's loadout.
+        inventorySync?.ClearSynced();
 
         AttachToPlayer(worldPlayer);
         progression.Initialize(config);
@@ -594,6 +608,14 @@ public class SurvivorMinigameController : MonoBehaviour
             levelUpObject.transform.SetParent(transform, false);
             levelUpUI = levelUpObject.AddComponent<SurvivorLevelUpUI>();
             levelUpUI.Initialize(this);
+        }
+
+        if (inventorySync == null)
+        {
+            inventorySync = gameObject.GetComponent<SurvivorInventorySync>();
+            if (inventorySync == null)
+                inventorySync = gameObject.AddComponent<SurvivorInventorySync>();
+            inventorySync.Initialize(this);
         }
 
         if (spawner == null)

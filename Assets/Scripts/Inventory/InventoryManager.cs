@@ -341,6 +341,65 @@ public class InventoryManager : MonoBehaviour
         return false;
     }
 
+    /// <summary>
+    /// Sets or updates a slot by name with no banners, toasts, or Power Core side effects.
+    /// Returns false if inventory is full and the item was not already present.
+    /// </summary>
+    public bool UpsertItemQuiet(string itemName, int quantity, Sprite itemSprite, string itemDescription)
+    {
+        if (string.IsNullOrEmpty(itemName) || itemSlot == null)
+            return false;
+
+        quantity = Mathf.Max(0, quantity);
+        if (quantity == 0)
+        {
+            RemoveItemCompletely(itemName);
+            return true;
+        }
+
+        for (int i = 0; i < itemSlot.Length; i++)
+        {
+            if (itemSlot[i].itemName == itemName)
+            {
+                itemSlot[i].SetContents(itemName, quantity, itemSprite, itemDescription);
+                return true;
+            }
+        }
+
+        for (int i = 0; i < itemSlot.Length; i++)
+        {
+            if (itemSlot[i].quantity == 0)
+            {
+                itemSlot[i].SetContents(itemName, quantity, itemSprite, itemDescription);
+                return true;
+            }
+        }
+
+        Debug.LogWarning($"InventoryManager.UpsertItemQuiet: no free slot for '{itemName}'.");
+        return false;
+    }
+
+    public void RemoveItemCompletely(string itemName)
+    {
+        if (string.IsNullOrEmpty(itemName) || itemSlot == null)
+            return;
+
+        for (int i = 0; i < itemSlot.Length; i++)
+        {
+            if (itemSlot[i].itemName == itemName)
+                itemSlot[i].EmptySlot();
+        }
+    }
+
+    public void RemoveItems(IEnumerable<string> itemNames)
+    {
+        if (itemNames == null)
+            return;
+
+        foreach (string itemName in itemNames)
+            RemoveItemCompletely(itemName);
+    }
+
     public void DeselectAllSlots()
     {
         for (int i = 0; i < itemSlot.Length; i++)

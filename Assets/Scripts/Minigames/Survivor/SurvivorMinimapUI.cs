@@ -7,7 +7,7 @@ using UnityEngine.UI;
 /// Small always-on radar (top-right) showing nearby SurvivorLandmarkMarkers relative to the player,
 /// expandable to a fixed-scale view of the whole play area with M. North-up (doesn't rotate with the
 /// player) — only the player arrow rotates to indicate facing, keeping the projection math simple.
-/// Built procedurally like SurvivorInventoryUI/SurvivorLevelUpUI rather than from a prefab.
+/// Built procedurally like SurvivorLevelUpUI rather than from a prefab.
 /// </summary>
 public class SurvivorMinimapUI : MonoBehaviour
 {
