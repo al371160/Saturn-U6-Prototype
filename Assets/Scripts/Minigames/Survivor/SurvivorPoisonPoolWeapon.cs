@@ -138,8 +138,12 @@ public class SurvivorPoisonFlask : MonoBehaviour
     private void Land()
     {
         GameObject poolObject = new GameObject("SurvivorPoisonPool");
-        poolObject.transform.position = transform.position;
-        poolObject.AddComponent<SurvivorPoisonPoolZone>().Initialize(damage, poolRadius, poolDuration);
+        SurvivorMinigameController owner = Object.FindFirstObjectByType<SurvivorMinigameController>();
+        LayerMask groundMask = owner != null && owner.config != null ? owner.config.groundMask : ~0;
+        float rayHeight = owner != null && owner.config != null ? owner.config.groundSnapRayHeight : 50f;
+        Vector3 grounded = SurvivorGroundUtility.SnapToGround(transform.position, groundMask, rayHeight, 0.02f);
+        poolObject.transform.position = grounded;
+        poolObject.AddComponent<SurvivorPoisonPoolZone>().Initialize(damage, poolRadius, poolDuration, groundMask, rayHeight);
         Destroy(gameObject);
     }
 }
@@ -152,18 +156,25 @@ public class SurvivorPoisonPoolZone : MonoBehaviour
     private float tickTimer;
     private const float TickInterval = 0.5f;
     private GameObject visual;
+    private ParticleSystem particles;
+    private LayerMask groundMask;
+    private float groundRayHeight;
+    private float groundSnapTimer;
 
-    public void Initialize(float damagePerTick, float poolRadius, float duration)
+    public void Initialize(float damagePerTick, float poolRadius, float duration, LayerMask groundLayerMask, float rayHeight)
     {
         tickDamage = damagePerTick * 0.4f;
         radius = poolRadius;
         remainingDuration = duration;
         tickTimer = TickInterval;
+        groundMask = groundLayerMask;
+        groundRayHeight = rayHeight;
+        groundSnapTimer = 0.4f;
 
         visual = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         visual.name = "PoisonPoolVisual";
         visual.transform.SetParent(transform, false);
-        visual.transform.localScale = new Vector3(radius * 2f, 0.05f, radius * 2f);
+        visual.transform.localScale = new Vector3(radius * 2f, 0.04f, radius * 2f);
 
         Collider visualCollider = visual.GetComponent<Collider>();
         if (visualCollider != null)
@@ -171,7 +182,48 @@ public class SurvivorPoisonPoolZone : MonoBehaviour
 
         Renderer renderer = visual.GetComponent<Renderer>();
         if (renderer != null)
-            renderer.material.color = new Color(0.4f, 0.85f, 0.3f, 0.5f);
+            renderer.material = SurvivorTransparentMaterial.Create(new Color(0.35f, 0.9f, 0.25f), 0.45f);
+
+        BuildParticles();
+    }
+
+    private void BuildParticles()
+    {
+        GameObject particleObject = new GameObject("PoisonPoolParticles");
+        particleObject.transform.SetParent(transform, false);
+        particles = particleObject.AddComponent<ParticleSystem>();
+
+        var main = particles.main;
+        main.loop = true;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(0.6f, 1.2f);
+        main.startSpeed = new ParticleSystem.MinMaxCurve(0.4f, 1.1f);
+        main.startSize = new ParticleSystem.MinMaxCurve(0.08f, 0.2f);
+        main.startColor = new Color(0.45f, 1f, 0.35f, 0.75f);
+        main.gravityModifier = -0.05f;
+        main.simulationSpace = ParticleSystemSimulationSpace.World;
+
+        var emission = particles.emission;
+        emission.rateOverTime = Mathf.Clamp(radius * 4f, 8f, 28f);
+
+        var shape = particles.shape;
+        shape.enabled = true;
+        shape.shapeType = ParticleSystemShapeType.Circle;
+        shape.radius = Mathf.Max(0.2f, radius * 0.85f);
+        shape.radiusThickness = 1f;
+
+        var color = particles.colorOverLifetime;
+        color.enabled = true;
+        Gradient g = new Gradient();
+        g.SetKeys(
+            new[]
+            {
+                new GradientColorKey(new Color(0.5f, 1f, 0.4f), 0f),
+                new GradientColorKey(new Color(0.2f, 0.7f, 0.15f), 1f)
+            },
+            new[] { new GradientAlphaKey(0.7f, 0f), new GradientAlphaKey(0f, 1f) });
+        color.color = g;
+
+        particles.Play();
     }
 
     private void Update()
@@ -179,8 +231,17 @@ public class SurvivorPoisonPoolZone : MonoBehaviour
         remainingDuration -= Time.deltaTime;
         if (remainingDuration <= 0f)
         {
+            if (particles != null)
+                particles.Stop(true, ParticleSystemStopBehavior.StopEmitting);
             Destroy(gameObject);
             return;
+        }
+
+        groundSnapTimer -= Time.deltaTime;
+        if (groundSnapTimer <= 0f)
+        {
+            groundSnapTimer = 0.5f;
+            transform.position = SurvivorGroundUtility.SnapToGround(transform.position, groundMask, groundRayHeight, 0.02f);
         }
 
         tickTimer -= Time.deltaTime;

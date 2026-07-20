@@ -18,6 +18,9 @@ public class StaminaUI : MonoBehaviour
 
     void Update()
     {
+        if (player == null || staminaUnitPrefab == null)
+            return;
+
         if (Mathf.CeilToInt(player.maxStamina / staminaPerUnit) != previousUnitCount)
         {
             GenerateStaminaUnits();
@@ -28,6 +31,9 @@ public class StaminaUI : MonoBehaviour
 
     void GenerateStaminaUnits()
     {
+        if (player == null || staminaUnitPrefab == null)
+            return;
+
         foreach (Transform child in transform)
         {
             Destroy(child.gameObject);
@@ -47,6 +53,9 @@ public class StaminaUI : MonoBehaviour
 
     void UpdateStaminaUI()
     {
+        if (player == null)
+            return;
+
         int fullUnits = Mathf.FloorToInt(player.currentStamina / staminaPerUnit);
 
         for (int i = 0; i < staminaUnits.Count; i++)

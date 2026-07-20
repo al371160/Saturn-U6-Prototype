@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 
 /// <summary>
 /// Generic boss executor — reads a SurvivorBossDataSO's attack pools rather than hardcoding a
@@ -40,6 +41,8 @@ public class SurvivorBossEnemy : MonoBehaviour, ISurvivorDamageable, ISurvivorSt
     private Color baseColor;
     private Vector3 knockbackVelocity;
     private float slowMultiplier = 1f;
+    private NavMeshAgent agent;
+    private bool useNavMesh;
 
     /// <summary>Bosses are heavy — knockback and slows land, just muted, so fights stay winnable.</summary>
     private const float BossKnockbackResistance = 0.3f;
@@ -77,6 +80,36 @@ public class SurvivorBossEnemy : MonoBehaviour, ISurvivorDamageable, ISurvivorSt
         currentPhase = 1;
         state = BossState.Chase;
         stateTimer = 0f;
+
+        SetupNavMeshAgent();
+    }
+
+    private void SetupNavMeshAgent()
+    {
+        agent = GetComponent<NavMeshAgent>();
+        if (agent == null)
+            agent = gameObject.AddComponent<NavMeshAgent>();
+
+        agent.speed = currentMoveSpeed;
+        agent.acceleration = 30f;
+        agent.angularSpeed = 540f;
+        agent.stoppingDistance = 1.5f;
+        agent.radius = Mathf.Max(0.6f, data != null ? data.scale * 0.4f : 0.8f);
+        agent.height = Mathf.Max(1.8f, data != null ? data.scale * 1.2f : 2f);
+        agent.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+        agent.updateRotation = true;
+        agent.updateUpAxis = false;
+
+        if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 6f, NavMesh.AllAreas))
+        {
+            agent.Warp(hit.position);
+            useNavMesh = agent.isOnNavMesh;
+        }
+        else
+        {
+            useNavMesh = false;
+            agent.enabled = false;
+        }
     }
 
     private void Update()
@@ -163,13 +196,18 @@ public class SurvivorBossEnemy : MonoBehaviour, ISurvivorDamageable, ISurvivorSt
             return;
         }
 
-        if (toPlayer.sqrMagnitude > 0.01f)
+        if (toPlayer.sqrMagnitude <= 0.01f)
+            return;
+
+        if (useNavMesh && agent != null && agent.enabled)
         {
-            Vector3 nextPosition = transform.position + toPlayer.normalized * (currentMoveSpeed * slowMultiplier * Time.deltaTime);
+            agent.isStopped = false;
+            agent.speed = currentMoveSpeed * slowMultiplier;
+            agent.SetDestination(playerTarget.position);
 
             if (knockbackVelocity.sqrMagnitude > 0.01f)
             {
-                nextPosition += knockbackVelocity * Time.deltaTime;
+                agent.Move(knockbackVelocity * Time.deltaTime);
                 knockbackVelocity = Vector3.Lerp(knockbackVelocity, Vector3.zero, Time.deltaTime * 6f);
             }
             else
@@ -177,9 +215,23 @@ public class SurvivorBossEnemy : MonoBehaviour, ISurvivorDamageable, ISurvivorSt
                 knockbackVelocity = Vector3.zero;
             }
 
-            transform.position = SurvivorGroundUtility.SnapToGround(nextPosition, groundMask, groundSnapRayHeight, groundHeightOffset);
-            transform.rotation = Quaternion.LookRotation(toPlayer);
+            return;
         }
+
+        Vector3 nextPosition = transform.position + toPlayer.normalized * (currentMoveSpeed * slowMultiplier * Time.deltaTime);
+
+        if (knockbackVelocity.sqrMagnitude > 0.01f)
+        {
+            nextPosition += knockbackVelocity * Time.deltaTime;
+            knockbackVelocity = Vector3.Lerp(knockbackVelocity, Vector3.zero, Time.deltaTime * 6f);
+        }
+        else
+        {
+            knockbackVelocity = Vector3.zero;
+        }
+
+        transform.position = SurvivorGroundUtility.SnapToGround(nextPosition, groundMask, groundSnapRayHeight, groundHeightOffset);
+        transform.rotation = Quaternion.LookRotation(toPlayer);
     }
 
     /// <summary>Weighted-random pick among attacks not currently on cooldown, so the same move
@@ -230,8 +282,28 @@ public class SurvivorBossEnemy : MonoBehaviour, ISurvivorDamageable, ISurvivorSt
         stateTimer = attack.telegraphDuration;
         attackTargetPosition = playerTarget.position;
 
+        SetAgentActive(false);
+
         if (bossRenderer != null)
             bossRenderer.material.color = Color.red;
+    }
+
+    private void SetAgentActive(bool active)
+    {
+        if (agent == null || !useNavMesh)
+            return;
+
+        if (!agent.enabled && active)
+            agent.enabled = true;
+
+        if (!agent.enabled)
+            return;
+
+        agent.isStopped = !active;
+        agent.updatePosition = active;
+        agent.updateRotation = active;
+        if (!active)
+            agent.ResetPath();
     }
 
     private void UpdateTelegraph()
@@ -321,7 +393,11 @@ public class SurvivorBossEnemy : MonoBehaviour, ISurvivorDamageable, ISurvivorSt
     {
         GameObject projectileObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         projectileObject.name = "SurvivorBossProjectile";
-        projectileObject.transform.position = transform.position + Vector3.up * 1.2f;
+        // Fly at player torso height so volleys connect even when the boss root sits higher.
+        float shotHeight = playerTarget != null ? playerTarget.position.y + 0.75f : transform.position.y + 0.75f;
+        Vector3 spawnPos = transform.position;
+        spawnPos.y = shotHeight;
+        projectileObject.transform.position = spawnPos;
         projectileObject.transform.localScale = Vector3.one * 0.6f;
 
         Collider col = projectileObject.GetComponent<Collider>();
@@ -355,7 +431,15 @@ public class SurvivorBossEnemy : MonoBehaviour, ISurvivorDamageable, ISurvivorSt
     {
         stateTimer -= Time.deltaTime;
         if (stateTimer <= 0f)
+        {
             state = BossState.Chase;
+            if (useNavMesh && agent != null)
+            {
+                if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 6f, NavMesh.AllAreas))
+                    agent.Warp(hit.position);
+                SetAgentActive(true);
+            }
+        }
     }
 
     public void TakeDamage(float amount)

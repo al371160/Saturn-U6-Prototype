@@ -28,11 +28,7 @@ public class SurvivorAuraWeapon : SurvivorWeaponBehavior
 
         Renderer renderer = visual.GetComponent<Renderer>();
         if (renderer != null)
-        {
-            Color c = data.weaponColor;
-            c.a = 0.25f;
-            renderer.material.color = c;
-        }
+            renderer.material = SurvivorTransparentMaterial.Create(data.weaponColor, 0.28f);
     }
 
     private void Update()

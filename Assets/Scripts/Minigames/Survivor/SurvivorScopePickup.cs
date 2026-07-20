@@ -23,7 +23,10 @@ public class SurvivorScopePickup : MonoBehaviour
 
     private void Update()
     {
-        if (controller == null || !controller.IsRunning || controller.IsPaused || playerTarget == null)
+        if (controller == null || !controller.IsRunning || playerTarget == null)
+            return;
+
+        if (controller.IsPaused && !controller.IsUpgradeMenuOpen)
             return;
 
         Vector3 toPlayer = playerTarget.position - transform.position;

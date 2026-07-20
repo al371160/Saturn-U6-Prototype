@@ -28,7 +28,7 @@ public class SurvivorBossProjectile : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        SurvivorMinigamePlayer player = other.GetComponent<SurvivorMinigamePlayer>();
+        SurvivorMinigamePlayer player = other.GetComponentInParent<SurvivorMinigamePlayer>();
         if (player == null)
             return;
 

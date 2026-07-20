@@ -52,8 +52,11 @@ public class PlayerController : MonoBehaviour
     [Header("Jump/Gravity")]
     public float gravity = -9.81f;
     public float jumpHeight = 1.5f;
+    [Tooltip("Extra jumps allowed while airborne (1 = double jump, 2 = triple jump, etc.).")]
+    public int maxAirJumps = 2;
     public Vector3 velocity;
     public bool isGrounded;
+    private int airJumpsRemaining;
 
     [Header("Dash")]
     public float dashDistance = 10f;
@@ -63,11 +66,17 @@ public class PlayerController : MonoBehaviour
     private float dashTime = 0.2f;
     private float dashTimer;
 
-    [Header("Glide")]
-    public float glideMultiplier = -1.2f; // Adjusted from -2f
-    public float glideForwardSpeed = 3f;  // New
+    [Header("Freefall (hold Space)")]
+    [Tooltip("Enter freefall once downward speed reaches this (negative) value. Hold Space after that to deploy the camera-steered freefall glide.")]
+    public float freefallEnterVelocity = -6f;
+    [Tooltip("Legacy field kept for inspector compatibility; unused — freefall glide uses glideTotalSpeed instead.")]
+    public float glideMultiplier = -1.2f;
+    [Tooltip("Legacy field kept for inspector compatibility; unused — freefall glide steers via camera pitch.")]
+    public float glideForwardSpeed = 3f;
 
     private bool isGliding = false;
+    public bool isInFreefall = false;
+    public bool IsGliding => isGliding;
 
     [Header("Skydive (battle bus jump)")]
     [Tooltip("Fall speed the skydive gradually decelerates/accelerates towards, distinct from glide's instant clamp.")]
@@ -86,12 +95,12 @@ public class PlayerController : MonoBehaviour
         "so no gravity/movement/physics can ever displace them off the plane before they jump.")]
     public bool isRidingBus = false;
 
-    [Header("Freefall Glide (camera-steered, post-bus-jump)")]
-    [Tooltip("Optional — when assigned, freefall becomes a fast camera-steered glide: pitch the " +
-        "camera down to dive steeper (more fall speed, less horizontal), or level it out for a " +
-        "flatter, faster horizontal glide. Falls back to the old simple momentum-decay fall if unassigned.")]
+    [Header("Freefall Glide (camera-steered)")]
+    [Tooltip("When assigned, hold-Space freefall and bus skydive both use camera-steered glide: pitch down to dive " +
+        "steeper (more fall speed, less horizontal), or level out for a flatter, faster horizontal glide. " +
+        "Falls back to simple momentum-decay freefall if unassigned.")]
     public SurvivorMouseAimRig aimRig;
-    [Tooltip("Total glide speed budget (the vertical/horizontal split is determined by camera pitch); as fast as the fall itself, per design.")]
+    [Tooltip("Total freefall-glide speed budget (vertical/horizontal split is determined by camera pitch).")]
     public float glideTotalSpeed = 45f;
 
     [Header("Stamina")]
@@ -189,8 +198,17 @@ public class PlayerController : MonoBehaviour
             aimRig = FindFirstObjectByType<SurvivorMouseAimRig>();
 
         swimming = GetComponent<PlayerSwimming>();
-        if (leftGlideTrail != null) leftGlideTrail.emitting = false;
-        if (rightGlideTrail != null) rightGlideTrail.emitting = false;
+        // Respect authored TrailRenderer values on the object — only toggle emitting.
+        if (leftGlideTrail != null)
+        {
+            leftGlideTrail.enabled = true;
+            leftGlideTrail.emitting = false;
+        }
+        if (rightGlideTrail != null)
+        {
+            rightGlideTrail.enabled = true;
+            rightGlideTrail.emitting = false;
+        }
 
         ragdollHips = playerAnim.GetBoneTransform(HumanBodyBones.Hips);
         if (ragdollHips == null) Debug.LogError("Hips not found! Ragdoll will fail.");
@@ -215,10 +233,7 @@ public class PlayerController : MonoBehaviour
         // 1. ROTATION: Always try to rotate first unless physically a ragdoll
         // This fixes the issue where you couldn't look around at the start.
         if (canLook)
-        {
             RotateTowardsMousePoint();
-            Debug.Log("canLook: " + canLook);
-        }
 
         // 1.5 SKYDIVE STATE: falling from the battle bus, overrides normal movement/look
         if (isSkydiving)
@@ -288,14 +303,36 @@ public class PlayerController : MonoBehaviour
         //Debug.Log(currentStamina);
         // Ground Check
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
-        if (isGrounded && velocity.y < 0)
+        if (isGrounded)
         {
-            velocity.y = -2f;
+            if (velocity.y < 0)
+                velocity.y = -2f;
+            isInFreefall = false;
+            isSkydiving = false;
+            airJumpsRemaining = Mathf.Max(0, maxAirJumps);
         }
-        Debug.Log("canMove: " + canMove);
-        Debug.Log("isExhaustedFall: " + isExhaustedFall);
-        Debug.Log("freeToMove: " + freeToMove);
+        else if (velocity.y <= freefallEnterVelocity)
+        {
+            // Once falling fast enough, unlock freefall — hold Space to deploy freefall glide.
+            if (!isInFreefall)
+            {
+                EnsureAimRig();
+                if (aimRig != null)
+                {
+                    skydiveVisualYaw = aimRig.CameraYaw;
+                    skydiveVisualPitch = aimRig.CameraPitch;
+                }
+                else
+                {
+                    skydiveVisualYaw = transform.eulerAngles.y;
+                    skydiveVisualPitch = 0f;
+                }
+            }
+            isInFreefall = true;
+        }
 
+        // Keep trail state in sync even if we early-out for swimming below.
+        SetGlideTrailsEmitting(isInFreefall || isSkydiving || isGliding);
 
         /* if (isExhaustedFall && !isRagdoll)
         {
@@ -316,110 +353,96 @@ public class PlayerController : MonoBehaviour
         inputDir = new Vector3(horizontal, 0f, vertical).normalized;
         float targetSpeed = walkSpeed;
 
-        // Sprint
-        isSprinting = Input.GetKey(KeyCode.LeftShift) && inputDir.magnitude > 0.1f && currentStamina > 0 && isGrounded;
-        if (isSprinting)
+        // Ground jump + midair jumps. Freefall glide still uses hold-Space once air jumps are spent.
+        bool jumpPressed = Input.GetButtonDown("Jump");
+        if (jumpPressed && currentStamina >= jumpStaminaCost && !isSkydiving)
         {
-            targetSpeed = sprintSpeed;
-            UseStamina(sprintStaminaPerSecond * Time.deltaTime);
-            playerAnim.SetBool("isSprinting", true);
-        } else{
-            playerAnim.SetBool("isSprinting", false);
-        }
-
-        // Movement (camera-relative, so "forward" always means "into the current view")
-        RaycastHit hit;
-        Vector3 moveDir = GetCameraRelativeMoveDirection(horizontal, vertical);
-        if (Physics.Raycast(transform.position, moveDir.normalized, out hit, 1f, groundMask))
-        {
-            float angle = Vector3.Angle(hit.normal, Vector3.up);
-            if (angle > controller.slopeLimit)
+            bool canGroundJump = isGrounded;
+            bool canAirJump = !isGrounded && airJumpsRemaining > 0;
+            if (canGroundJump || canAirJump)
             {
-                // Prevent walking up too-steep slope
-                moveDir = Vector3.zero;
-            }
-        }
- 
-        controller.Move(moveDir.normalized * targetSpeed * Time.deltaTime);
-        
+                velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+                UseStamina(jumpStaminaCost);
+                playerAnim.SetTrigger("isJumping");
+                isInFreefall = false;
+                isGliding = false;
 
-        playerAnim.SetBool("isRunning", inputDir.magnitude >= 0.1f && isGrounded);
+                if (canAirJump)
+                    airJumpsRemaining--;
 
-        
-        // Jump
-        if (Input.GetButtonDown("Jump") && currentStamina >= jumpStaminaCost)
-        {
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-            UseStamina(jumpStaminaCost);
-            playerAnim.SetTrigger("isJumping");
+                if (jumpParticles != null)
+                    jumpParticles.Play();
 
-            if (jumpParticles != null)
-                jumpParticles.Play(); // <- Jump effect here
+                if (jumpAudioSource != null && jumpClip != null)
+                {
+                    jumpAudioSource.clip = jumpClip;
 
-            if (jumpAudioSource != null && jumpClip != null)
-            {
-                jumpAudioSource.clip = jumpClip;
+                    if (randomizePitch)
+                        jumpAudioSource.pitch = Random.Range(minPitch, maxPitch);
+                    else
+                        jumpAudioSource.pitch = 1f;
 
-                if (randomizePitch)
-                    jumpAudioSource.pitch = Random.Range(minPitch, maxPitch);
-                else
-                    jumpAudioSource.pitch = 1f;
-
-                jumpAudioSource.Play();
+                    jumpAudioSource.Play();
+                }
             }
         }
 
+        // Freefall glide: hold Space after freefall unlock, once air jumps are used up
+        // (or on a hold that isn't a fresh jump press).
+        isGliding = isInFreefall && Input.GetButton("Jump") && !jumpPressed
+            && airJumpsRemaining <= 0 && currentStamina > 0f;
+        UpdateGlideFx(isGliding);
+        SetGlideTrailsEmitting(isInFreefall || isSkydiving || isGliding);
 
-
-        // Glide
-        isGliding = !isGrounded && Input.GetButton("Jump") && velocity.y < 0 /*&& currentStamina > 0 */;
         if (isGliding)
         {
+            EnsureAimRig();
             UseStamina(glideStaminaPerSecond * Time.deltaTime);
-            playerAnim.SetBool("isGliding", true);
+            ApplyFreefallGlideMovement();
 
-            if (glideAudioSource != null && glideClip != null && !glideAudioSource.isPlaying)
-            {
-                glideAudioSource.clip = glideClip;
-                glideAudioSource.loop = true;
-
-                if (randomizePitch)
-                    glideAudioSource.pitch = Random.Range(minPitch, maxPitch);
-                else
-                    glideAudioSource.pitch = 1f;
-
-                glideAudioSource.Play();
-            }
-
-
-            // Optional forward momentum
-            Vector3 forwardBoost = transform.forward * glideForwardSpeed;
-            controller.Move(forwardBoost * Time.deltaTime);
-        } else
-        {
-            playerAnim.SetBool("isGliding", false);
-            if (glideAudioSource != null && glideAudioSource.isPlaying)
-            {
-                glideAudioSource.Stop();
-            }
-
-        }
-
-
-        // Gravity
-        if (isGliding)
-        {
-            velocity.y = glideMultiplier; // Or whatever constant fall speed you want while gliding
+            // Skip walk/sprint while freefall-gliding — camera pitch owns the velocity.
+            playerAnim.SetBool("isRunning", false);
+            playerAnim.SetBool("isSprinting", false);
         }
         else
         {
+            // Sprint
+            isSprinting = Input.GetKey(KeyCode.LeftShift) && inputDir.magnitude > 0.1f && currentStamina > 0 && isGrounded;
+            if (isSprinting)
+            {
+                targetSpeed = sprintSpeed;
+                UseStamina(sprintStaminaPerSecond * Time.deltaTime);
+                playerAnim.SetBool("isSprinting", true);
+            }
+            else
+            {
+                playerAnim.SetBool("isSprinting", false);
+            }
+
+            // Movement (camera-relative, so "forward" always means "into the current view")
+            RaycastHit hit;
+            Vector3 moveDir = GetCameraRelativeMoveDirection(horizontal, vertical);
+            if (Physics.Raycast(transform.position, moveDir.normalized, out hit, 1f, groundMask))
+            {
+                float angle = Vector3.Angle(hit.normal, Vector3.up);
+                if (angle > controller.slopeLimit)
+                {
+                    // Prevent walking up too-steep slope
+                    moveDir = Vector3.zero;
+                }
+            }
+
+            controller.Move(moveDir.normalized * targetSpeed * Time.deltaTime);
+
+            playerAnim.SetBool("isRunning", inputDir.magnitude >= 0.1f && isGrounded);
+
+            // Gravity (true freefall / normal air time when not holding Space)
             velocity.y += gravity * Time.deltaTime;
-        }
 
-
-        if (!isDashing)
-        {
-            controller.Move(velocity * Time.deltaTime);
+            if (!isDashing)
+            {
+                controller.Move(velocity * Time.deltaTime);
+            }
         }
 
         // Dash
@@ -502,20 +525,7 @@ public class PlayerController : MonoBehaviour
 
 
 
-    // GLIDING TRAILS
-    if (leftGlideTrail != null && rightGlideTrail != null)
-    {
-        if (isGliding)
-        {
-            if (!leftGlideTrail.emitting) leftGlideTrail.emitting = true;
-            if (!rightGlideTrail.emitting) rightGlideTrail.emitting = true;
-        }
-        else
-        {
-            if (leftGlideTrail.emitting) leftGlideTrail.emitting = false;
-            if (rightGlideTrail.emitting) rightGlideTrail.emitting = false;
-        }
-    }
+    // Glide trails are driven from Update via SetGlideTrailsEmitting (freefall + glide).
 
 
     // SWIMMING PARTICLES
@@ -827,11 +837,13 @@ public class PlayerController : MonoBehaviour
     public void BeginSkydive(Vector3 initialHorizontalVelocity)
     {
         isSkydiving = true;
+        isInFreefall = true;
         canMove = true;
         skydiveHorizontalVelocity = initialHorizontalVelocity;
         velocity = Vector3.zero;
         isGrounded = false;
 
+        EnsureAimRig();
         // Seed the smoothed visual yaw/pitch from wherever the camera already is, so the very
         // first skydive frame doesn't snap/blend from the bus's (unrelated) travel-direction yaw.
         if (aimRig != null)
@@ -846,15 +858,40 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private void EnsureAimRig()
+    {
+        if (aimRig == null)
+            aimRig = FindFirstObjectByType<SurvivorMouseAimRig>();
+    }
+
     private void UpdateSkydive()
+    {
+        // Bus exit drop always uses freefall glide; Space no longer cancels it —
+        // Space is the freefall-glide control once you're already falling.
+        isGliding = true;
+        UpdateGlideFx(true);
+        SetGlideTrailsEmitting(true);
+        ApplyFreefallGlideMovement();
+
+        // Hand off to the normal freefall path once close to the ground.
+        bool nearGround = groundCheck != null && Physics.CheckSphere(groundCheck.position, groundDistance * 5f, groundMask);
+        if (nearGround)
+        {
+            isSkydiving = false;
+            isInFreefall = true;
+        }
+    }
+
+    /// <summary>
+    /// Camera-steered freefall glide shared by bus skydive and hold-Space freefall.
+    /// Pitch trades vertical fall for horizontal distance at a constant total speed.
+    /// </summary>
+    private void ApplyFreefallGlideMovement()
     {
         Vector3 totalVelocity;
 
         if (aimRig != null)
         {
-            // Camera-steered glide: pitching the camera down/up trades vertical fall speed for
-            // horizontal distance (and vice versa), Fortnite-freefall-style. Total speed stays
-            // constant (glideTotalSpeed) — only the vertical/horizontal split changes with pitch.
             float pitchRad = aimRig.CameraPitch * Mathf.Deg2Rad;
             float yawRad = aimRig.CameraYaw * Mathf.Deg2Rad;
 
@@ -865,18 +902,15 @@ public class PlayerController : MonoBehaviour
             totalVelocity = flatForward * horizontalSpeed + Vector3.up * verticalSpeed;
             velocity.y = verticalSpeed;
 
-            // Face the dive direction by independently smoothing yaw and pitch and rebuilding the
-            // rotation directly (roll always exactly 0). A single Quaternion.Slerp across two
-            // orientations that differ in both yaw AND pitch at once can pass through intermediate
-            // orientations with visible roll/lean even though neither endpoint has any — that was
-            // the cause of the character looking tilted/rotated sideways during the glide.
+            // Face the dive direction by independently smoothing yaw and pitch (roll always 0).
             skydiveVisualYaw = Mathf.LerpAngle(skydiveVisualYaw, aimRig.CameraYaw, Time.deltaTime * 4f);
             skydiveVisualPitch = Mathf.LerpAngle(skydiveVisualPitch, aimRig.CameraPitch, Time.deltaTime * 4f);
             transform.rotation = Quaternion.Euler(skydiveVisualPitch, skydiveVisualYaw, 0f);
+            lookYaw = skydiveVisualYaw;
         }
         else
         {
-            // Fallback (no aim rig wired, e.g. base Campaign use): simple momentum decay.
+            // Fallback (no aim rig): simple momentum decay toward terminal velocity.
             velocity.y = Mathf.MoveTowards(velocity.y, skydiveTerminalVelocity, skydiveVerticalDrag * Time.deltaTime);
             skydiveHorizontalVelocity = Vector3.MoveTowards(skydiveHorizontalVelocity, Vector3.zero, skydiveHorizontalDrag * Time.deltaTime);
             totalVelocity = skydiveHorizontalVelocity + Vector3.up * velocity.y;
@@ -889,13 +923,40 @@ public class PlayerController : MonoBehaviour
         }
 
         controller.Move(totalVelocity * Time.deltaTime);
+    }
 
-        // Exit skydiving either by choice (glide input, same button as the existing wingsuit glide)
-        // or automatically once close to the ground — the normal gravity/glide Update() path takes
-        // over from there using the vertical speed already carried in `velocity`.
-        bool nearGround = groundCheck != null && Physics.CheckSphere(groundCheck.position, groundDistance * 5f, groundMask);
-        if (Input.GetButton("Jump") || nearGround)
-            isSkydiving = false;
+    private void UpdateGlideFx(bool gliding)
+    {
+        if (playerAnim != null)
+            playerAnim.SetBool("isGliding", gliding);
+
+        if (gliding)
+        {
+            if (glideAudioSource != null && glideClip != null && !glideAudioSource.isPlaying)
+            {
+                glideAudioSource.clip = glideClip;
+                glideAudioSource.loop = true;
+
+                if (randomizePitch)
+                    glideAudioSource.pitch = Random.Range(minPitch, maxPitch);
+                else
+                    glideAudioSource.pitch = 1f;
+
+                glideAudioSource.Play();
+            }
+        }
+        else if (glideAudioSource != null && glideAudioSource.isPlaying)
+        {
+            glideAudioSource.Stop();
+        }
+    }
+
+    private void SetGlideTrailsEmitting(bool emitting)
+    {
+        if (leftGlideTrail != null && leftGlideTrail.emitting != emitting)
+            leftGlideTrail.emitting = emitting;
+        if (rightGlideTrail != null && rightGlideTrail.emitting != emitting)
+            rightGlideTrail.emitting = emitting;
     }
 
     private void StartRagdoll()

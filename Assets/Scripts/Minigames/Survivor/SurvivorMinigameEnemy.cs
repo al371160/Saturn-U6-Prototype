@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 
 [RequireComponent(typeof(Collider))]
 public class SurvivorMinigameEnemy : MonoBehaviour, ISurvivorDamageable, ISurvivorContactDamageSource, ISurvivorStatusTarget
@@ -24,6 +25,8 @@ public class SurvivorMinigameEnemy : MonoBehaviour, ISurvivorDamageable, ISurviv
     private float hitPunchTimer;
     private Vector3 baseScale = Vector3.one;
     private float jigglePhaseOffset;
+    private NavMeshAgent agent;
+    private bool useNavMesh;
 
     private const float KnockbackGravity = -30f;
     private const float KnockbackLaunchMultiplier = 1.5f;
@@ -57,6 +60,9 @@ public class SurvivorMinigameEnemy : MonoBehaviour, ISurvivorDamageable, ISurviv
         Renderer enemyRenderer = GetComponent<Renderer>();
         if (enemyRenderer != null)
             enemyRenderer.material.color = EliteColor;
+
+        if (agent != null)
+            agent.radius = Mathf.Max(0.35f, agent.radius * EliteScaleMultiplier);
     }
 
     public void Initialize(
@@ -82,70 +88,137 @@ public class SurvivorMinigameEnemy : MonoBehaviour, ISurvivorDamageable, ISurviv
         groundHeightOffset = groundOffset;
         groundSnapInterval = Mathf.Max(0.05f, snapInterval);
 
-        // Spawn position already arrived pre-snapped from the spawner; stagger the first
-        // re-snap so hundreds of enemies don't all raycast on the same frame.
         cachedGroundY = transform.position.y;
         groundSnapTimer = Random.Range(0f, groundSnapInterval);
 
         baseScale = transform.localScale;
         jigglePhaseOffset = Random.Range(0f, Mathf.PI * 2f);
+
+        SetupNavMeshAgent();
+    }
+
+    private void SetupNavMeshAgent()
+    {
+        agent = GetComponent<NavMeshAgent>();
+        if (agent == null)
+            agent = gameObject.AddComponent<NavMeshAgent>();
+
+        agent.speed = moveSpeed;
+        agent.acceleration = 40f;
+        agent.angularSpeed = 720f;
+        agent.stoppingDistance = 1.1f;
+        agent.radius = Mathf.Max(0.35f, baseScale.x * 0.35f);
+        agent.height = Mathf.Max(1.2f, baseScale.y);
+        agent.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+        agent.autoBraking = true;
+        agent.updateRotation = true;
+        agent.updateUpAxis = false;
+
+        if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 4f, NavMesh.AllAreas))
+        {
+            agent.Warp(hit.position);
+            useNavMesh = agent.isOnNavMesh;
+        }
+        else
+        {
+            useNavMesh = false;
+            agent.enabled = false;
+        }
     }
 
     private void Update()
     {
         if (playerTarget == null || controller == null || !controller.IsRunning || controller.IsPaused)
+        {
+            if (agent != null && agent.enabled)
+                agent.isStopped = true;
             return;
+        }
 
+        bool airborne = airborneHeight > 0.01f || verticalVelocity > 0f || knockbackVelocity.sqrMagnitude > 0.25f;
         Vector3 toPlayer = playerTarget.position - transform.position;
         toPlayer.y = 0f;
 
-        Vector3 nextPosition = transform.position;
-        if (toPlayer.sqrMagnitude > 0.01f)
+        if (useNavMesh && agent != null && agent.enabled && !airborne)
         {
-            nextPosition += toPlayer.normalized * (moveSpeed * slowMultiplier * Time.deltaTime);
-            transform.rotation = Quaternion.LookRotation(toPlayer);
-        }
+            agent.isStopped = false;
+            agent.speed = moveSpeed * slowMultiplier;
+            if (toPlayer.sqrMagnitude > 0.01f)
+                agent.SetDestination(playerTarget.position);
 
-        if (knockbackVelocity.sqrMagnitude > 0.01f)
-        {
-            nextPosition += knockbackVelocity * Time.deltaTime;
-            knockbackVelocity = Vector3.Lerp(knockbackVelocity, Vector3.zero, Time.deltaTime * 6f);
+            // Soft lateral knockback while still on mesh.
+            if (knockbackVelocity.sqrMagnitude > 0.01f)
+            {
+                agent.Move(knockbackVelocity * Time.deltaTime);
+                knockbackVelocity = Vector3.Lerp(knockbackVelocity, Vector3.zero, Time.deltaTime * 6f);
+            }
+            else
+            {
+                knockbackVelocity = Vector3.zero;
+            }
         }
         else
         {
-            knockbackVelocity = Vector3.zero;
-        }
+            if (agent != null && agent.enabled)
+                agent.isStopped = true;
 
-        // Knockback lift: fall back to the ground under gravity once launched.
-        if (airborneHeight > 0f || verticalVelocity > 0f)
-        {
-            verticalVelocity += KnockbackGravity * Time.deltaTime;
-            airborneHeight += verticalVelocity * Time.deltaTime;
-            if (airborneHeight <= 0f)
+            Vector3 nextPosition = transform.position;
+            if (toPlayer.sqrMagnitude > 0.01f && !airborne)
             {
-                airborneHeight = 0f;
-                verticalVelocity = 0f;
+                nextPosition += toPlayer.normalized * (moveSpeed * slowMultiplier * Time.deltaTime);
+                transform.rotation = Quaternion.LookRotation(toPlayer);
             }
-        }
 
-        groundSnapTimer -= Time.deltaTime;
-        if (groundSnapTimer <= 0f)
-        {
-            groundSnapTimer = groundSnapInterval;
-            cachedGroundY = SurvivorGroundUtility.SnapToGround(nextPosition, groundMask, groundSnapRayHeight, groundHeightOffset).y;
-        }
+            if (knockbackVelocity.sqrMagnitude > 0.01f)
+            {
+                nextPosition += knockbackVelocity * Time.deltaTime;
+                knockbackVelocity = Vector3.Lerp(knockbackVelocity, Vector3.zero, Time.deltaTime * 6f);
+            }
+            else
+            {
+                knockbackVelocity = Vector3.zero;
+            }
 
-        nextPosition.y = cachedGroundY + airborneHeight;
-        transform.position = nextPosition;
+            if (airborneHeight > 0f || verticalVelocity > 0f)
+            {
+                verticalVelocity += KnockbackGravity * Time.deltaTime;
+                airborneHeight += verticalVelocity * Time.deltaTime;
+                if (airborneHeight <= 0f)
+                {
+                    airborneHeight = 0f;
+                    verticalVelocity = 0f;
+                    TryRejoinNavMesh(nextPosition);
+                }
+            }
+
+            groundSnapTimer -= Time.deltaTime;
+            if (groundSnapTimer <= 0f)
+            {
+                groundSnapTimer = groundSnapInterval;
+                cachedGroundY = SurvivorGroundUtility.SnapToGround(nextPosition, groundMask, groundSnapRayHeight, groundHeightOffset).y;
+            }
+
+            nextPosition.y = cachedGroundY + airborneHeight;
+            transform.position = nextPosition;
+        }
 
         UpdateSquashAndStretch();
     }
 
-    /// <summary>
-    /// Simple procedural squash/stretch: a subtle idle jiggle at all times, an elongation while
-    /// airborne from a knockback launch, and a compression pulse on landing. Phase-offset per
-    /// instance so hundreds of enemies don't all pulse in sync.
-    /// </summary>
+    private void TryRejoinNavMesh(Vector3 nearPosition)
+    {
+        if (agent == null)
+            return;
+
+        if (NavMesh.SamplePosition(nearPosition, out NavMeshHit hit, 4f, NavMesh.AllAreas))
+        {
+            agent.enabled = true;
+            agent.Warp(hit.position);
+            useNavMesh = agent.isOnNavMesh;
+            agent.isStopped = false;
+        }
+    }
+
     private void UpdateSquashAndStretch()
     {
         bool isAirborneNow = airborneHeight > 0.01f;
@@ -162,7 +235,6 @@ public class SurvivorMinigameEnemy : MonoBehaviour, ISurvivorDamageable, ISurviv
         float idleJiggle = Mathf.Sin(Time.time * JiggleSpeed + jigglePhaseOffset) * JiggleAmplitude;
         float stretchFromAir = isAirborneNow ? Mathf.Clamp(Mathf.Abs(verticalVelocity), 0f, 8f) * 0.02f : 0f;
         float squashFromLanding = -squashTimer * LandingSquashAmount;
-        // Hit punch alternates sign at high speed so it reads as a shudder rather than a single squash.
         float hitPunch = hitPunchTimer * HitPunchAmount * Mathf.Sin(hitPunchTimer * Mathf.PI * 6f);
 
         float yScaleOffset = idleJiggle + stretchFromAir + squashFromLanding + hitPunch;
@@ -188,6 +260,8 @@ public class SurvivorMinigameEnemy : MonoBehaviour, ISurvivorDamageable, ISurviv
             knockbackVelocity += direction.normalized * force;
 
         verticalVelocity += force * KnockbackLaunchMultiplier;
+        if (agent != null && agent.enabled)
+            agent.isStopped = true;
     }
 
     public void SetSlowMultiplier(float multiplier)

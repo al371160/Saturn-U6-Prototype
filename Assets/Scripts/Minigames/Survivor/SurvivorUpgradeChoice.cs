@@ -34,13 +34,14 @@ public static class SurvivorUpgradePool
                     continue;
 
                 int currentStar = controller.WeaponManager.GetStarLevel(weapon);
-                bool isNew = currentStar <= 0;
-                bool isMaxStar = !isNew && currentStar >= weapon.MaxStar;
+                bool isOwned = currentStar > 0;
+                bool isMaxStar = isOwned && currentStar >= weapon.MaxStar;
 
-                if (isNew || !isMaxStar)
+                // New weapons only come from loot boxes — upgrades offer star-ups for owned weapons.
+                if (isOwned && !isMaxStar)
                 {
-                    int nextStar = isNew ? 1 : Mathf.Min(weapon.MaxStar, currentStar + 1);
-                    string title = isNew ? $"New: {weapon.displayName}" : $"Upgrade: {weapon.displayName}";
+                    int nextStar = Mathf.Min(weapon.MaxStar, currentStar + 1);
+                    string title = $"Upgrade: {weapon.displayName}";
                     string levelDescription = weapon.GetLevelDescription(nextStar);
                     SurvivorWeaponDataSO capturedWeapon = weapon;
 
@@ -49,7 +50,7 @@ public static class SurvivorUpgradePool
 
                 // Diep.io-style branch choices — offered alongside the flat upgrade once equipped
                 // and past a branch's requiredStar (which can be below max star).
-                if (!isNew && weapon.evolutionOptions != null)
+                if (isOwned && weapon.evolutionOptions != null)
                 {
                     foreach (SurvivorWeaponEvolutionOption option in weapon.evolutionOptions)
                     {

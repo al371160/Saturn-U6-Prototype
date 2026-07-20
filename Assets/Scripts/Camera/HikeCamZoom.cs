@@ -37,6 +37,7 @@ public class HikeCamZoom : MonoBehaviour
     public float heightZoomMultiplier = 1.5f;
 
     private CinemachineComponentBase positionComponent;
+    private PlayerController playerController;
 
     void Start()
     {
@@ -46,6 +47,11 @@ public class HikeCamZoom : MonoBehaviour
         {
             Debug.LogError("Cinemachine Body component not found on the CinemachineCamera.");
         }
+
+        if (player != null)
+            playerController = player.GetComponent<PlayerController>();
+        if (playerController == null)
+            playerController = FindFirstObjectByType<PlayerController>();
     }
 
     void Update()
@@ -130,7 +136,7 @@ public class HikeCamZoom : MonoBehaviour
         return normalZOffset;
     }
 
-    bool IsGliding() => Input.GetKey(KeyCode.Space);
-    bool IsClimbing() => Input.GetKey(KeyCode.LeftShift);
-    bool IsSprinting() => Input.GetKey(KeyCode.LeftControl);
+    bool IsGliding() => playerController != null && playerController.IsGliding;
+    bool IsClimbing() => playerController != null && Input.GetKey(KeyCode.LeftShift);
+    bool IsSprinting() => playerController != null && Input.GetKey(KeyCode.LeftControl);
 }

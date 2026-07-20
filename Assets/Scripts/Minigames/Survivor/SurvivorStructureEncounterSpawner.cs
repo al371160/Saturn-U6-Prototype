@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 
 /// <summary>
 /// Preplaced near a structure. When the player enters <see cref="activationRadius"/>, spawns a
@@ -42,6 +43,46 @@ public class SurvivorStructureEncounterSpawner : MonoBehaviour
         controller = FindFirstObjectByType<SurvivorMinigameController>();
         if (blockedMask.value == 0)
             blockedMask = LayerMask.GetMask("Default", "Obstacle", "Ground");
+
+        EnsureNavMeshObstacle();
+    }
+
+    /// <summary>Carve this structure's footprint out of the NavMesh so agents path around walls
+    /// even if the bake didn't include post-placed prefabs.</summary>
+    private void EnsureNavMeshObstacle()
+    {
+        NavMeshObstacle obstacle = GetComponent<NavMeshObstacle>();
+        if (obstacle == null)
+            obstacle = gameObject.AddComponent<NavMeshObstacle>();
+
+        Bounds bounds = CalculateLocalBounds();
+        obstacle.carving = true;
+        obstacle.carveOnlyStationary = true;
+        obstacle.shape = NavMeshObstacleShape.Box;
+        obstacle.center = bounds.center;
+        obstacle.size = new Vector3(
+            Mathf.Max(2f, bounds.size.x),
+            Mathf.Max(2f, bounds.size.y),
+            Mathf.Max(2f, bounds.size.z));
+    }
+
+    private Bounds CalculateLocalBounds()
+    {
+        Renderer[] renderers = GetComponentsInChildren<Renderer>();
+        if (renderers.Length == 0)
+            return new Bounds(Vector3.up, new Vector3(8f, 4f, 8f));
+
+        Bounds world = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++)
+            world.Encapsulate(renderers[i].bounds);
+
+        Vector3 localCenter = transform.InverseTransformPoint(world.center);
+        Vector3 scale = transform.lossyScale;
+        Vector3 localSize = new Vector3(
+            scale.x != 0f ? Mathf.Abs(world.size.x / scale.x) : world.size.x,
+            scale.y != 0f ? Mathf.Abs(world.size.y / scale.y) : world.size.y,
+            scale.z != 0f ? Mathf.Abs(world.size.z / scale.z) : world.size.z);
+        return new Bounds(localCenter, localSize);
     }
 
     private void Update()

@@ -29,6 +29,10 @@ public class ItemSO : ScriptableObject
     [Header("Minigame Settings")]
     public MinigameType requiredMinigame = MinigameType.None;
 
+    [Header("Survivor")]
+    [Tooltip("When set, this inventory item represents a Survivor weapon (Power Core–style wiring).")]
+    public SurvivorWeaponDataSO survivorWeapon;
+
     public void UseItem()
     {
         ItemEffectManager.Instance.ApplyEffect(this);

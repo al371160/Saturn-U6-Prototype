@@ -16,14 +16,19 @@ public class SurvivorMinigameController : MonoBehaviour
     public TextMeshProUGUI statusText;
     public TextMeshProUGUI levelBarText;
     public Slider healthBar;
+    [Tooltip("Deprecated — Survivor uses Power Core StaminaUI dots instead of a bar.")]
     public Slider staminaBar;
     public Slider xpBar;
+    public StaminaUI staminaDotsUI;
+    public GameObject staminaUnitPrefab;
 
     [Header("Templates")]
     public GameObject enemyTemplate;
 
     public bool IsRunning { get; private set; }
     public bool IsPaused { get; private set; }
+    /// <summary>True while starter-weapon / level-up UI is open. World keeps running under a pause shield.</summary>
+    public bool IsUpgradeMenuOpen { get; private set; }
     public bool IsBossActive => activeBosses.Count > 0;
     public SurvivorRoundResult? FinalResult { get; private set; }
     private readonly List<SurvivorBossEnemy> activeBosses = new List<SurvivorBossEnemy>();
@@ -104,6 +109,7 @@ public class SurvivorMinigameController : MonoBehaviour
     private GameObject xpGemTemplate;
     private int pendingLevelUps;
     private int killCount;
+    private SurvivorPauseShield pauseShield;
 
     private void Awake()
     {
@@ -151,6 +157,23 @@ public class SurvivorMinigameController : MonoBehaviour
 
         AttachToPlayer(worldPlayer);
         progression.Initialize(config);
+
+        if (staminaDotsUI != null)
+            staminaDotsUI.player = worldPlayer;
+        else if (hudCanvas != null)
+            EnsureStaminaDotsHud(hudCanvas.transform);
+        else
+        {
+            StaminaUI existing = FindFirstObjectByType<StaminaUI>();
+            if (existing != null)
+            {
+                staminaDotsUI = existing;
+                staminaDotsUI.player = worldPlayer;
+            }
+        }
+
+        if (staminaBar != null)
+            staminaBar.gameObject.SetActive(false);
     }
 
     /// <summary>Idempotent — the bus path handles this while riding; the non-bus path handles it
@@ -200,7 +223,7 @@ public class SurvivorMinigameController : MonoBehaviour
         EnsurePlayerSystemsReady();
 
         spawner.Initialize(this, config, minigamePlayer.transform, enemyRoot, enemyTemplate);
-        SpawnScopeStructures();
+        SpawnLootCrates();
 
         IsRunning = true;
         RefreshHud();
@@ -208,44 +231,90 @@ public class SurvivorMinigameController : MonoBehaviour
         HandleWeaponChoiceIfNeeded();
     }
 
-    /// <summary>Scatters a handful of basic destructible structures around the player that drop a
-    /// random Scope buff tier when destroyed — pulls the Scope pool straight from config.availableBuffs
-    /// (buffType == CameraZoom) rather than a separate hand-maintained list.</summary>
-    private void SpawnScopeStructures()
+    /// <summary>Spawns breakable loot crates at random picks from fixed map anchors (not player-relative).
+    /// Crates drop weapons or buffs when shattered.</summary>
+    private void SpawnLootCrates()
     {
-        List<SurvivorBuffDataSO> scopePool = new List<SurvivorBuffDataSO>();
+        List<SurvivorBuffDataSO> buffPool = new List<SurvivorBuffDataSO>();
         if (config.availableBuffs != null)
         {
             foreach (SurvivorBuffDataSO buff in config.availableBuffs)
             {
-                if (buff != null && buff.buffType == SurvivorBuffType.CameraZoom)
-                    scopePool.Add(buff);
+                if (buff != null)
+                    buffPool.Add(buff);
             }
         }
 
-        if (scopePool.Count == 0 || worldPlayer == null)
+        SurvivorWeaponDataSO[] weapons = config.availableWeapons;
+        SurvivorBuffDataSO[] buffs = buffPool.ToArray();
+        if ((weapons == null || weapons.Length == 0) && buffs.Length == 0)
             return;
 
-        SurvivorBuffDataSO[] pool = scopePool.ToArray();
-        const int structureCount = 6;
-        const float minScatter = 15f;
-        const float maxScatter = 60f;
+        Vector3[] candidateAreas = GetPredeterminedCrateAreas();
+        if (candidateAreas.Length == 0)
+            return;
 
-        for (int i = 0; i < structureCount; i++)
+        const int structureCount = 14;
+        int spawnCount = Mathf.Min(structureCount, candidateAreas.Length);
+
+        Vector3[] shuffled = (Vector3[])candidateAreas.Clone();
+        for (int i = shuffled.Length - 1; i > 0; i--)
         {
-            Vector2 randomCircle = Random.insideUnitCircle.normalized * Random.Range(minScatter, maxScatter);
-            Vector3 spawnPosition = worldPlayer.transform.position + new Vector3(randomCircle.x, 0f, randomCircle.y);
+            int j = Random.Range(0, i + 1);
+            Vector3 tmp = shuffled[i];
+            shuffled[i] = shuffled[j];
+            shuffled[j] = tmp;
+        }
+
+        Transform pickupTarget = worldPlayer != null ? worldPlayer.transform : minigamePlayer != null ? minigamePlayer.transform : null;
+
+        for (int i = 0; i < spawnCount; i++)
+        {
+            Vector3 area = shuffled[i];
+            Vector2 jitter = Random.insideUnitCircle * 6f;
+            Vector3 spawnPosition = area + new Vector3(jitter.x, 0f, jitter.y);
             spawnPosition = SurvivorGroundUtility.SnapToGround(spawnPosition, config.groundMask, config.groundSnapRayHeight, 0.8f);
 
-            GameObject structureObject = new GameObject("SurvivorScopeStructure");
+            GameObject structureObject = new GameObject("SurvivorLootCrate");
             structureObject.transform.position = spawnPosition;
 
             BoxCollider structureCollider = structureObject.AddComponent<BoxCollider>();
-            structureCollider.size = Vector3.one * 1.6f;
+            structureCollider.size = Vector3.one;
 
-            SurvivorScopeStructure structure = structureObject.AddComponent<SurvivorScopeStructure>();
-            structure.Initialize(this, worldPlayer.transform, pool, 40f);
+            SurvivorLootCrate crate = structureObject.AddComponent<SurvivorLootCrate>();
+            crate.Initialize(this, pickupTarget, weapons, buffs, 50f, 0.65f);
         }
+    }
+
+    /// <summary>Fixed world anchors spread across the Level 1 terrain (±240 padded). Each run
+    /// randomly activates a subset — positions themselves do not depend on the player.</summary>
+    private static Vector3[] GetPredeterminedCrateAreas()
+    {
+        return new Vector3[]
+        {
+            new Vector3(0f, 0f, 0f),
+            new Vector3(-140f, 0f, -100f),
+            new Vector3(150f, 0f, -140f),
+            new Vector3(-180f, 0f, 160f),
+            new Vector3(-80f, 0f, 180f),
+            new Vector3(60f, 0f, 170f),
+            new Vector3(180f, 0f, 80f),
+            new Vector3(-60f, 0f, 80f),
+            new Vector3(120f, 0f, 120f),
+            new Vector3(-200f, 0f, 40f),
+            new Vector3(-40f, 0f, -40f),
+            new Vector3(40f, 0f, -60f),
+            new Vector3(100f, 0f, 20f),
+            new Vector3(-100f, 0f, 120f),
+            new Vector3(200f, 0f, -80f),
+            new Vector3(-160f, 0f, -40f),
+            new Vector3(20f, 0f, 200f),
+            new Vector3(-20f, 0f, 40f),
+            new Vector3(-120f, 0f, -180f),
+            new Vector3(80f, 0f, -180f),
+            new Vector3(-180f, 0f, -160f),
+            new Vector3(160f, 0f, 40f),
+        };
     }
 
     private void ShowInitialWeaponChoice()
@@ -273,10 +342,11 @@ public class SurvivorMinigameController : MonoBehaviour
         levelUpUI.ShowChoices(choices, "Choose your weapon");
     }
 
+    /// <summary>Soft menu pause: world keeps running under an invincible forcefield (no timeScale freeze).</summary>
     private void FreezeGameplay()
     {
-        IsPaused = true;
-        Time.timeScale = 0f;
+        IsUpgradeMenuOpen = true;
+        Time.timeScale = 1f;
 
         if (worldPlayer != null)
         {
@@ -284,18 +354,34 @@ public class SurvivorMinigameController : MonoBehaviour
             worldPlayer.canLook = false;
         }
 
+        if (minigamePlayer != null)
+            minigamePlayer.IsInvulnerable = true;
+
+        Transform follow = worldPlayer != null ? worldPlayer.transform : minigamePlayer != null ? minigamePlayer.transform : null;
+        if (pauseShield == null && follow != null)
+            pauseShield = SurvivorPauseShield.Attach(follow, 6.5f);
+
         SetMenuMouseUnlocked(true);
     }
 
     private void UnfreezeGameplay()
     {
-        IsPaused = false;
+        IsUpgradeMenuOpen = false;
         Time.timeScale = 1f;
 
         if (worldPlayer != null)
         {
             worldPlayer.canMove = true;
             worldPlayer.canLook = true;
+        }
+
+        if (minigamePlayer != null)
+            minigamePlayer.IsInvulnerable = false;
+
+        if (pauseShield != null)
+        {
+            pauseShield.Teardown();
+            pauseShield = null;
         }
 
         SetMenuMouseUnlocked(false);
@@ -324,8 +410,9 @@ public class SurvivorMinigameController : MonoBehaviour
             }
         }
 
-        if (staminaBar != null)
-            staminaBar.value = worldPlayer.maxStamina > 0f ? worldPlayer.currentStamina / worldPlayer.maxStamina : 0f;
+        // Stamina is rendered by StaminaUI dots (Power Core units), not a slider bar.
+        if (staminaBar != null && staminaBar.gameObject.activeSelf)
+            staminaBar.gameObject.SetActive(false);
 
         if (xpBar != null && progression != null)
             xpBar.value = progression.XPToNextLevel > 0 ? (float)progression.CurrentXP / progression.XPToNextLevel : 0f;
@@ -446,6 +533,9 @@ public class SurvivorMinigameController : MonoBehaviour
         }
 
         SurvivorCombatFX.Shake(1f);
+
+        if (minigamePlayer != null)
+            SurvivorExplosionFX.Play(minigamePlayer.transform.position, 12f, new Color(1f, 0.55f, 0.2f));
     }
 
     private void SpawnBoss()
@@ -482,7 +572,7 @@ public class SurvivorMinigameController : MonoBehaviour
     {
         pendingLevelUps++;
 
-        if (!IsPaused)
+        if (!IsUpgradeMenuOpen)
             ShowNextLevelUpChoice();
     }
 
@@ -666,10 +756,106 @@ public class SurvivorMinigameController : MonoBehaviour
         statusText.rectTransform.pivot = new Vector2(0f, 1f);
         statusText.rectTransform.anchoredPosition = new Vector2(24f, -24f);
 
-        healthBar = BuildBar(canvasObject.transform, "HealthBar", new Vector2(0f, 68f), new Color(0.35f, 0.95f, 0.45f));
-        staminaBar = BuildBar(canvasObject.transform, "StaminaBar", new Vector2(0f, 46f), new Color(0.95f, 0.85f, 0.3f));
-        xpBar = BuildBar(canvasObject.transform, "XPBar", new Vector2(0f, 24f), new Color(0.55f, 0.65f, 0.95f));
-        levelBarText = BuildLabeledBar(canvasObject.transform, "LevelBar", new Vector2(0f, 2f), new Color(0.7f, 0.5f, 0.9f), "Lv. 1");
+        healthBar = BuildBar(canvasObject.transform, "HealthBar", new Vector2(0f, 92f), new Color(0.35f, 0.95f, 0.45f));
+        // No yellow/brown stamina bar — Power Core dots sit in the bottom HUD stack.
+        staminaBar = null;
+        HideLegacyStaminaBars();
+        EnsureStaminaDotsHud(canvasObject.transform);
+        xpBar = BuildBar(canvasObject.transform, "XPBar", new Vector2(0f, 46f), new Color(0.55f, 0.65f, 0.95f));
+        levelBarText = BuildLabeledBar(canvasObject.transform, "LevelBar", new Vector2(0f, 24f), new Color(0.7f, 0.5f, 0.9f), "Lv. 1");
+    }
+
+    private void HideLegacyStaminaBars()
+    {
+        if (staminaBar != null)
+            staminaBar.gameObject.SetActive(false);
+
+        // Hide leftover overworld stamina sliders that sit in the middle-bottom HUD.
+        Slider[] sliders = FindObjectsByType<Slider>(FindObjectsSortMode.None);
+        for (int i = 0; i < sliders.Length; i++)
+        {
+            Slider s = sliders[i];
+            if (s == null || s == healthBar || s == xpBar)
+                continue;
+
+            string n = s.gameObject.name.ToLowerInvariant();
+            if (n.Contains("stamina") || n.Contains("energy"))
+                s.gameObject.SetActive(false);
+        }
+    }
+
+    private void EnsureStaminaDotsHud(Transform canvasTransform)
+    {
+        if (staminaUnitPrefab == null)
+        {
+#if UNITY_EDITOR
+            staminaUnitPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/UI/StaminaUnit.prefab");
+#endif
+        }
+
+        // Reuse existing StaminaUI if present, but reparent into the middle-bottom HUD stack.
+        if (staminaDotsUI == null)
+            staminaDotsUI = FindFirstObjectByType<StaminaUI>();
+
+        RectTransform dotsRect;
+        if (staminaDotsUI != null)
+        {
+            dotsRect = staminaDotsUI.GetComponent<RectTransform>();
+            if (dotsRect == null)
+                dotsRect = staminaDotsUI.gameObject.AddComponent<RectTransform>();
+            staminaDotsUI.transform.SetParent(canvasTransform, false);
+        }
+        else
+        {
+            GameObject dotsRoot = new GameObject("StaminaDots", typeof(RectTransform));
+            dotsRoot.transform.SetParent(canvasTransform, false);
+            dotsRect = dotsRoot.GetComponent<RectTransform>();
+
+            HorizontalLayoutGroup layout = dotsRoot.AddComponent<HorizontalLayoutGroup>();
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.spacing = 6f;
+            layout.childControlWidth = false;
+            layout.childControlHeight = false;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+
+            staminaDotsUI = dotsRoot.AddComponent<StaminaUI>();
+            staminaDotsUI.staminaUnitPrefab = staminaUnitPrefab;
+            staminaDotsUI.staminaPerUnit = 10;
+        }
+
+        // Middle-bottom, above the HP / XP / level bars.
+        dotsRect.anchorMin = new Vector2(0.5f, 0f);
+        dotsRect.anchorMax = new Vector2(0.5f, 0f);
+        dotsRect.pivot = new Vector2(0.5f, 0f);
+        dotsRect.anchoredPosition = new Vector2(0f, 118f);
+        dotsRect.sizeDelta = new Vector2(360f, 48f);
+
+        // Prefer horizontal layout in the bottom stack. DestroyImmediate so we can add
+        // HorizontalLayoutGroup in the same frame (Unity forbids both layout groups).
+        VerticalLayoutGroup vertical = staminaDotsUI.GetComponent<VerticalLayoutGroup>();
+        if (vertical != null)
+            DestroyImmediate(vertical);
+
+        HorizontalLayoutGroup horizontal = staminaDotsUI.GetComponent<HorizontalLayoutGroup>();
+        if (horizontal == null)
+            horizontal = staminaDotsUI.gameObject.AddComponent<HorizontalLayoutGroup>();
+
+        if (horizontal != null)
+        {
+            horizontal.childAlignment = TextAnchor.MiddleCenter;
+            horizontal.spacing = 6f;
+            horizontal.childControlWidth = false;
+            horizontal.childControlHeight = false;
+            horizontal.childForceExpandWidth = false;
+            horizontal.childForceExpandHeight = false;
+        }
+
+        if (staminaDotsUI.staminaUnitPrefab == null)
+            staminaDotsUI.staminaUnitPrefab = staminaUnitPrefab;
+
+        PlayerController player = worldPlayer != null ? worldPlayer : FindFirstObjectByType<PlayerController>();
+        staminaDotsUI.player = player;
     }
 
     private Slider BuildBar(Transform canvasTransform, string name, Vector2 anchoredPosition, Color fillColor)

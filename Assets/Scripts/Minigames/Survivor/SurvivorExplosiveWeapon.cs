@@ -152,6 +152,21 @@ public class SurvivorExplosiveShell : MonoBehaviour
         }
 
         SurvivorCombatFX.Shake(0.8f);
+
+        Color tint = Color.white;
+        Renderer shellRenderer = GetComponent<Renderer>();
+        if (shellRenderer != null)
+            tint = shellRenderer.material.color;
+        else if (element == SurvivorElementType.Fire)
+            tint = new Color(1f, 0.45f, 0.15f);
+        else if (element == SurvivorElementType.Ice)
+            tint = new Color(0.45f, 0.8f, 1f);
+        else if (element == SurvivorElementType.Poison)
+            tint = new Color(0.4f, 0.95f, 0.3f);
+        else if (element == SurvivorElementType.Lightning)
+            tint = new Color(0.85f, 0.75f, 1f);
+
+        SurvivorExplosionFX.Play(transform.position, blastRadius, tint);
         Destroy(gameObject);
     }
 }

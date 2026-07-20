@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d08c1188a57964d2cae97cf1a181db1f, type: 3}
+  m_Name: Toxic Flask
+  m_EditorClassIdentifier: 
+  itemName: Toxic Flask
+  usable: 0
+  important: 1
+  icon: {fileID: 21300000, guid: 28508a60b6f1c45da8d4850a633a4a30, type: 3}
+  description: Toxic Flask.
+  pickupSound: {fileID: 0}
+  statToChange: 0
+  amountToChangeStat: 10
+  suitMaxWeight: 10
+  suitMaxAltitude: 50
+  suitMaxSpeed: 8
+  requiredMinigame: 3
+  survivorWeapon: {fileID: 11400000, guid: c69faf355a1cb4686b849a615b6472bb, type: 2}

@@ -22,6 +22,7 @@ public class SurvivorMinigamePlayer : MonoBehaviour
     public float DamageReductionPercent { get; private set; }
     public float MagnetRadiusBonus { get; private set; }
     public int BonusXPPerKill { get; private set; }
+    public bool IsInvulnerable { get; set; }
 
     public void Initialize(SurvivorMinigameController owner, SurvivorMinigameConfig levelConfig)
     {
@@ -147,7 +148,7 @@ public class SurvivorMinigamePlayer : MonoBehaviour
         if (controller == null || !controller.IsRunning || config == null)
             return;
 
-        if (contactCooldown > 0f)
+        if (IsInvulnerable || contactCooldown > 0f)
             return;
 
         contactCooldown = config.contactDamageCooldown;
@@ -162,7 +163,7 @@ public class SurvivorMinigamePlayer : MonoBehaviour
     /// cooldown, since the storm should reliably tick every second regardless of recent enemy hits.</summary>
     public void TakeStormDamage(float amount)
     {
-        if (controller == null || !controller.IsRunning)
+        if (controller == null || !controller.IsRunning || IsInvulnerable)
             return;
 
         currentHealth -= amount * (1f - DamageReductionPercent);
