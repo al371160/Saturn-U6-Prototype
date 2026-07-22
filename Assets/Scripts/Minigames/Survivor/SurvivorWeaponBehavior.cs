@@ -34,13 +34,13 @@ public abstract class SurvivorWeaponBehavior : MonoBehaviour
     protected abstract void OnStarLevelChanged();
 
     /// <summary>
-    /// Auto and manual weapons only fire while left-click is held.
-    /// Press E to lock/unlock all weapons (safety) — while locked, nothing fires.
+    /// Auto-fire ON: all weapons fire continuously. Auto-fire OFF: hold LMB to fire.
+    /// Toggle with Q (sticky across pickups). Pause forcefield is separate and never auto-fires.
     /// </summary>
     protected bool CanFire()
     {
-        if (SurvivorWeaponManager.FireLocked)
-            return false;
+        if (SurvivorWeaponManager.AutoFireEnabled)
+            return true;
 
         return Input.GetMouseButton(0);
     }
@@ -48,7 +48,7 @@ public abstract class SurvivorWeaponBehavior : MonoBehaviour
     /// <summary>Public gate for companions (drones) that fire on behalf of this weapon.</summary>
     public bool AllowsFiring => CanFire();
 
-    /// <summary>Hold LMB to redirect fire toward the cursor (manual aim).</summary>
+    /// <summary>LMB redirects fire toward the cursor (manual aim) in both auto and manual modes.</summary>
     protected bool IsCursorAimHeld => Input.GetMouseButton(0);
 
     protected void PlayFireSfx()

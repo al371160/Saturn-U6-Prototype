@@ -51,6 +51,9 @@ public class Chest : MonoBehaviour
 
         foreach (GameObject itemPrefab in itemsToSpawn)
         {
+            if (IsPowerCore(itemPrefab))
+                continue;
+
             GameObject spawnedItem = Instantiate(itemPrefab, spawnPoint.position, Quaternion.identity);
 
             // Give it a randomized upward force
@@ -69,6 +72,22 @@ public class Chest : MonoBehaviour
                 StartCoroutine(EnableItemAfterDelay(itemScript, 0.5f)); // optional delay
             }
         }
+    }
+
+    /// <summary>Power Core is a story item — never chest loot. Chests were adjusted in the scene,
+    /// but this guard protects against any leftover/edited references too.</summary>
+    private bool IsPowerCore(GameObject itemPrefab)
+    {
+        if (itemPrefab == null)
+            return false;
+
+        Item itemScript = itemPrefab.GetComponent<Item>();
+        if (itemScript == null || itemScript.itemData == null)
+            return false;
+
+        return itemScript.itemData.itemName == "Power Core"
+            || itemPrefab.name == "Power Core"
+            || itemPrefab.name == "powercoreObject";
     }
 
     private IEnumerator EnableItemAfterDelay(Item item, float delay)

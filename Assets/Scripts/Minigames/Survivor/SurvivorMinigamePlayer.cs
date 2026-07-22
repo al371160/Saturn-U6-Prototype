@@ -97,13 +97,33 @@ public class SurvivorMinigamePlayer : MonoBehaviour
         MagnetRadiusBonus += amount;
     }
 
+    /// <summary>Max scope magnitude acquired this run (e.g. 0.15 for +15% / "1.15x").</summary>
+    public float HighestScopeMagnitude => highestScopeMagnitude;
+
+    /// <summary>0..1 slider of how much of the owned max scope zoom to use.</summary>
+    public float ScopeZoomSlider { get; private set; } = 1f;
+
+    /// <summary>Effective zoom multiplier currently applied to follow cams (1 = default).</summary>
+    public float EffectiveScopeZoomMultiplier => 1f + highestScopeMagnitude * Mathf.Clamp01(ScopeZoomSlider);
+
     // Scopes don't stack (surviv.io-style) — only the strongest one the player currently holds
     // is effective, so picking up a 2x after an 8x is a no-op rather than extra zoom.
     public void ApplyCameraZoomBonus(float percent)
     {
         highestScopeMagnitude = Mathf.Max(highestScopeMagnitude, percent);
-        cameraZoomMultiplier = 1f + highestScopeMagnitude;
+        ApplyScopeZoomToCameras();
+    }
 
+    /// <summary>UI slider — dials between 1x and the strongest owned scope.</summary>
+    public void SetScopeZoomSlider(float t)
+    {
+        ScopeZoomSlider = Mathf.Clamp01(t);
+        ApplyScopeZoomToCameras();
+    }
+
+    private void ApplyScopeZoomToCameras()
+    {
+        cameraZoomMultiplier = EffectiveScopeZoomMultiplier;
         foreach (SurvivorFollowCameraRig rig in FindObjectsByType<SurvivorFollowCameraRig>(FindObjectsSortMode.None))
             rig.SetZoomMultiplier(cameraZoomMultiplier);
     }
@@ -168,6 +188,20 @@ public class SurvivorMinigamePlayer : MonoBehaviour
             return;
 
         currentHealth -= amount * (1f - DamageReductionPercent);
+        controller.RefreshHud();
+
+        if (currentHealth <= 0f)
+            controller.HandlePlayerDefeated();
+    }
+
+    /// <summary>Boss/enemy projectiles — ignores contact i-frames so bullets that pass through still hurt.</summary>
+    public void TakeProjectileDamage(float amount)
+    {
+        if (controller == null || !controller.IsRunning || IsInvulnerable)
+            return;
+
+        currentHealth -= amount * (1f - DamageReductionPercent);
+        SurvivorAudio.PlayPlayerHurt();
         controller.RefreshHud();
 
         if (currentHealth <= 0f)

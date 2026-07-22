@@ -65,6 +65,8 @@ public class PlayerController : MonoBehaviour
     private bool isDashing = false;
     private float dashTime = 0.2f;
     private float dashTimer;
+    /// <summary>Last non-zero camera-relative move direction — used when dashing while idle.</summary>
+    private Vector3 lastDashMoveDir = Vector3.forward;
 
     [Header("Freefall (hold Space)")]
     [Tooltip("Enter freefall once downward speed reaches this (negative) value. Hold Space after that to deploy the camera-steered freefall glide.")]
@@ -455,6 +457,9 @@ public class PlayerController : MonoBehaviour
             // Movement (camera-relative, so "forward" always means "into the current view")
             RaycastHit hit;
             Vector3 moveDir = GetCameraRelativeMoveDirection(horizontal, vertical);
+            if (moveDir.sqrMagnitude > 0.01f)
+                lastDashMoveDir = moveDir.normalized;
+
             if (Physics.Raycast(transform.position, moveDir.normalized, out hit, 1f, groundMask))
             {
                 float angle = Vector3.Angle(hit.normal, Vector3.up);
@@ -478,12 +483,20 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        // Dash
-        if (Input.GetKeyDown(KeyCode.C) && canDash && !isDashing && inputDir != Vector3.zero && currentStamina >= dashStaminaCost)
+        // Dash — camera-relative input direction, else last move direction
+        if (Input.GetKeyDown(KeyCode.C) && canDash && !isDashing && currentStamina >= dashStaminaCost)
         {
-            UseStamina(dashStaminaCost);
-            StartCoroutine(Dash(inputDir));
-            playerAnim.SetTrigger("isDashing");
+            Vector3 dashDir = GetCameraRelativeMoveDirection(horizontal, vertical);
+            if (dashDir.sqrMagnitude < 0.01f)
+                dashDir = lastDashMoveDir;
+
+            if (dashDir.sqrMagnitude > 0.01f)
+            {
+                lastDashMoveDir = dashDir.normalized;
+                UseStamina(dashStaminaCost);
+                StartCoroutine(Dash(dashDir.normalized));
+                playerAnim.SetTrigger("isDashing");
+            }
         }
 
         if (!isSprinting && !isGliding && !isClimbing && currentStamina < maxStamina && isGrounded)
@@ -772,17 +785,21 @@ public class PlayerController : MonoBehaviour
 
 
 
-    private IEnumerator Dash(Vector3 inputDir)
+    private IEnumerator Dash(Vector3 worldDashDirection)
     {
         canDash = false;
         isDashing = true;
         dashTimer = dashTime;
 
-        Vector3 dashDirection = transform.forward * inputDir.z + transform.right * inputDir.x;
+        Vector3 dashDirection = worldDashDirection;
+        dashDirection.y = 0f;
+        if (dashDirection.sqrMagnitude < 0.01f)
+            dashDirection = transform.forward;
+        dashDirection.Normalize();
 
         while (dashTimer > 0)
         {
-            controller.Move(dashDirection.normalized * dashDistance * Time.deltaTime / dashTime);
+            controller.Move(dashDirection * dashDistance * Time.deltaTime / dashTime);
             dashTimer -= Time.deltaTime;
             yield return null;
         }

@@ -40,7 +40,7 @@ public class SurvivorInventorySync : MonoBehaviour
                 if (weapon?.Data == null)
                     continue;
 
-                string name = weapon.Data.displayName;
+                string name = string.IsNullOrEmpty(weapon.Data.displayName) ? "Weapon" : weapon.Data.displayName;
                 string description = string.IsNullOrEmpty(weapon.Data.description)
                     ? $"Survivor weapon — Lv.{weapon.StarLevel}"
                     : $"{weapon.Data.description}\nLv.{weapon.StarLevel}/{weapon.Data.MaxStar}";
@@ -57,7 +57,7 @@ public class SurvivorInventorySync : MonoBehaviour
                 if (entry.Key == null || entry.Value <= 0)
                     continue;
 
-                string name = entry.Key.displayName;
+                string name = string.IsNullOrEmpty(entry.Key.displayName) ? "Buff" : entry.Key.displayName;
                 string description = string.IsNullOrEmpty(entry.Key.description)
                     ? $"Survivor buff — x{entry.Value}"
                     : $"{entry.Key.description}\nx{entry.Value}";
@@ -66,6 +66,10 @@ public class SurvivorInventorySync : MonoBehaviour
                     syncedNames.Add(name);
             }
         }
+
+        // Batch syncs never route through a slot's pointer click, so the shared description panel
+        // would otherwise sit blank until the player manually clicks something.
+        inventoryManager.EnsureSlotSelected();
     }
 
     public void ClearSynced()

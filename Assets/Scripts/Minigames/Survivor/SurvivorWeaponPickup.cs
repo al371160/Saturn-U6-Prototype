@@ -3,7 +3,10 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// World weapon drop: approach for a rarity-colored bubble (name / rarity / E), press E to equip.
+/// World weapon drop: approach for a screen-space overlay prompt (name / rarity / stars / E),
+/// press E to equip. The prompt is a single shared overlay parented on SurvivorHud (falling back to
+/// a dedicated overlay canvas if the HUD isn't built yet) — it no longer billboards a world-space
+/// canvas, so it stays crisp and legible regardless of camera distance/angle.
 /// </summary>
 [RequireComponent(typeof(Collider))]
 public class SurvivorWeaponPickup : MonoBehaviour
@@ -11,20 +14,17 @@ public class SurvivorWeaponPickup : MonoBehaviour
     private const float InteractRadius = 1.85f;
     private const float SpinDegreesPerSecond = 30f;
 
+    private static GameObject sharedPromptRoot;
+    private static Image sharedBubbleOutline;
+    private static TMP_Text sharedPromptText;
+    private static SurvivorWeaponPickup activeOwner;
+
     private SurvivorMinigameController controller;
     private SurvivorWeaponDataSO weapon;
     private int startStar = 1;
     private GameObject visual;
 
     private bool playerInRange;
-    private bool promptVisible;
-
-    private Canvas promptCanvas;
-    private RectTransform bubbleRoot;
-    private Image bubbleOutline;
-    private Image bubbleFill;
-    private TMP_Text promptText;
-    private Camera promptCamera;
 
     public void Initialize(
         SurvivorMinigameController owner,
@@ -39,8 +39,6 @@ public class SurvivorWeaponPickup : MonoBehaviour
         startStar = weapon != null ? Mathf.Clamp(starLevel, 1, weapon.MaxStar) : 1;
         ConfigureCollider();
         BuildVisual();
-        EnsurePromptUi();
-        HidePrompt();
     }
 
     private void ConfigureCollider()
@@ -73,27 +71,23 @@ public class SurvivorWeaponPickup : MonoBehaviour
 
     private void EnsurePromptUi()
     {
-        if (bubbleRoot != null)
+        if (sharedPromptRoot != null)
             return;
 
-        promptCamera = Camera.main;
+        Transform parent = ResolveOverlayParent();
 
-        GameObject canvasObject = new GameObject("WeaponPickupPromptCanvas");
-        canvasObject.transform.SetParent(transform, false);
-        promptCanvas = canvasObject.AddComponent<Canvas>();
-        promptCanvas.renderMode = RenderMode.WorldSpace;
-        promptCanvas.worldCamera = promptCamera;
-        canvasObject.AddComponent<CanvasScaler>().dynamicPixelsPerUnit = 10f;
-
-        RectTransform canvasRt = promptCanvas.GetComponent<RectTransform>();
-        canvasRt.sizeDelta = new Vector2(4f, 2.5f);
-        canvasRt.localPosition = new Vector3(0f, 1.6f, 0f);
-        canvasRt.localScale = Vector3.one * 0.01f;
+        GameObject rootObject = new GameObject("WeaponPickupPrompt", typeof(RectTransform));
+        rootObject.transform.SetParent(parent, false);
+        RectTransform rootRect = rootObject.GetComponent<RectTransform>();
+        rootRect.anchorMin = new Vector2(0.5f, 0f);
+        rootRect.anchorMax = new Vector2(0.5f, 0f);
+        rootRect.pivot = new Vector2(0.5f, 0f);
+        rootRect.anchoredPosition = new Vector2(0f, 210f);
 
         GameObject outlineObject = new GameObject("BubbleOutline", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        outlineObject.transform.SetParent(canvasObject.transform, false);
-        bubbleOutline = outlineObject.GetComponent<Image>();
-        bubbleOutline.color = Color.white;
+        outlineObject.transform.SetParent(rootObject.transform, false);
+        sharedBubbleOutline = outlineObject.GetComponent<Image>();
+        sharedBubbleOutline.color = Color.white;
         RectTransform outlineRt = outlineObject.GetComponent<RectTransform>();
         outlineRt.anchorMin = new Vector2(0.5f, 0.5f);
         outlineRt.anchorMax = new Vector2(0.5f, 0.5f);
@@ -101,7 +95,7 @@ public class SurvivorWeaponPickup : MonoBehaviour
 
         GameObject fillObject = new GameObject("BubbleFill", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         fillObject.transform.SetParent(outlineObject.transform, false);
-        bubbleFill = fillObject.GetComponent<Image>();
+        Image bubbleFill = fillObject.GetComponent<Image>();
         bubbleFill.color = SurvivorUiStyle.DarkPanel;
         RectTransform fillRt = fillObject.GetComponent<RectTransform>();
         fillRt.anchorMin = Vector2.zero;
@@ -110,65 +104,56 @@ public class SurvivorWeaponPickup : MonoBehaviour
         fillRt.offsetMax = new Vector2(-8f, -8f);
 
         GameObject textObject = new GameObject("PromptText", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
-        textObject.transform.SetParent(fillObject.transform, false);
-        promptText = textObject.GetComponent<TextMeshProUGUI>();
-        promptText.alignment = TextAlignmentOptions.Center;
-        promptText.fontSize = 36f;
-        SurvivorUiStyle.ApplyTextOnDark(promptText);
+        textObject.transform.SetParent(outlineObject.transform, false);
+        sharedPromptText = textObject.GetComponent<TextMeshProUGUI>();
+        sharedPromptText.alignment = TextAlignmentOptions.Center;
+        sharedPromptText.fontSize = 32f;
+        SurvivorUiStyle.ApplyTextOnDark(sharedPromptText);
         TMP_FontAsset promptFont = ResolvePromptFont();
-        SurvivorUiStyle.ApplyFont(promptText, promptFont);
-        promptText.enableWordWrapping = true;
-        promptText.overflowMode = TextOverflowModes.Overflow;
-        promptText.raycastTarget = false;
+        SurvivorUiStyle.ApplyFont(sharedPromptText, promptFont);
+        sharedPromptText.enableWordWrapping = true;
+        sharedPromptText.overflowMode = TextOverflowModes.Overflow;
+        sharedPromptText.raycastTarget = false;
 
         ContentSizeFitter textFitter = textObject.AddComponent<ContentSizeFitter>();
         textFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
         textFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-        RectTransform textRt = textObject.GetComponent<RectTransform>();
-        textRt.anchorMin = new Vector2(0.5f, 0.5f);
-        textRt.anchorMax = new Vector2(0.5f, 0.5f);
-        textRt.pivot = new Vector2(0.5f, 0.5f);
-        textRt.anchoredPosition = Vector2.zero;
+        LayoutElement textLe = textObject.AddComponent<LayoutElement>();
+        textLe.minWidth = 220f;
+        textLe.preferredWidth = 360f;
 
         ContentSizeFitter outlineFitter = outlineObject.AddComponent<ContentSizeFitter>();
         outlineFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
         outlineFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
         VerticalLayoutGroup layout = outlineObject.AddComponent<VerticalLayoutGroup>();
-        layout.padding = new RectOffset(28, 28, 22, 22);
+        layout.padding = new RectOffset(28, 28, 18, 18);
         layout.childAlignment = TextAnchor.MiddleCenter;
         layout.childControlWidth = true;
         layout.childControlHeight = true;
         layout.childForceExpandWidth = true;
         layout.childForceExpandHeight = true;
 
-        // Re-parent text under outline for layout; fill stays as decorative inset.
-        textObject.transform.SetParent(outlineObject.transform, false);
         fillObject.transform.SetAsFirstSibling();
 
-        LayoutElement textLe = textObject.AddComponent<LayoutElement>();
-        textLe.minWidth = 220f;
-        textLe.preferredWidth = 320f;
-
-        bubbleRoot = outlineRt;
-        canvasObject.SetActive(false);
+        sharedPromptRoot = rootObject;
+        sharedPromptRoot.SetActive(false);
     }
 
-    private void LateUpdate()
+    /// <summary>Prefers the Survivor HUD overlay canvas; falls back to a dedicated overlay canvas
+    /// (built once, reused) if a pickup somehow spawns before the HUD does.</summary>
+    private Transform ResolveOverlayParent()
     {
-        if (promptCanvas == null || !promptVisible)
-            return;
+        if (controller != null && controller.hudCanvas != null)
+            return controller.hudCanvas.transform;
 
-        if (promptCamera == null)
-            promptCamera = Camera.main;
-        if (promptCamera == null)
-            return;
-
-        promptCanvas.worldCamera = promptCamera;
-        Transform canvasTransform = promptCanvas.transform;
-        canvasTransform.position = transform.position + Vector3.up * 1.6f;
-        canvasTransform.rotation = Quaternion.LookRotation(canvasTransform.position - promptCamera.transform.position);
+        GameObject overlayObject = new GameObject("SurvivorWeaponPickupOverlayCanvas");
+        Canvas overlayCanvas = overlayObject.AddComponent<Canvas>();
+        overlayCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        overlayObject.AddComponent<CanvasScaler>();
+        overlayObject.AddComponent<GraphicRaycaster>();
+        return overlayObject.transform;
     }
 
     private void Update()
@@ -181,6 +166,9 @@ public class SurvivorWeaponPickup : MonoBehaviour
 
         if (controller.IsPaused && !controller.IsUpgradeMenuOpen)
             return;
+
+        if (activeOwner == this)
+            RefreshPromptText();
 
         if (Input.GetKeyDown(KeyCode.E))
             TryCollect();
@@ -206,10 +194,20 @@ public class SurvivorWeaponPickup : MonoBehaviour
 
     private void TryCollect()
     {
-        if (controller == null || weapon == null)
+        if (controller == null || weapon == null || controller.WeaponManager == null)
             return;
 
-        controller.WeaponManager?.EquipOrUpgrade(weapon, startStar);
+        bool alreadyOwned = controller.WeaponManager.IsEquipped(weapon);
+        if (!alreadyOwned && !controller.WeaponManager.CanEquipNewWeapon())
+        {
+            if (activeOwner == this && sharedPromptText != null)
+                sharedPromptText.text = "Weapon slots full (10)\nUpgrade owned weapons only";
+            return;
+        }
+
+        if (!controller.WeaponManager.EquipOrUpgrade(weapon, startStar))
+            return;
+
         controller.NotifyLoadoutChanged();
         SurvivorAudio.PlayWeaponPickup();
         HidePrompt();
@@ -219,28 +217,43 @@ public class SurvivorWeaponPickup : MonoBehaviour
     private void ShowPrompt()
     {
         EnsurePromptUi();
-        if (promptCanvas == null || promptText == null)
+        if (sharedPromptRoot == null || sharedPromptText == null)
+            return;
+
+        activeOwner = this;
+        RefreshPromptText();
+        sharedPromptRoot.SetActive(true);
+    }
+
+    /// <summary>Rebuilds the shared prompt's text/color for whichever pickup currently owns it.</summary>
+    private void RefreshPromptText()
+    {
+        if (sharedPromptText == null || weapon == null)
             return;
 
         string name = !string.IsNullOrEmpty(weapon.displayName) ? weapon.displayName : "Weapon";
         SurvivorWeaponRarity rarity = weapon.rarity;
         Color rarityColor = SurvivorLootRarity.GetColor(rarity);
+        int maxStar = Mathf.Max(1, weapon.MaxStar);
+        string stars = new string('\u2605', startStar) + new string('\u2606', Mathf.Max(0, maxStar - startStar));
 
-        promptText.text = name + "\n" + rarity + " ★" + startStar + "\nE to pickup";
-        SurvivorUiStyle.ApplyTextOnDark(promptText);
-        if (bubbleOutline != null)
-            bubbleOutline.color = rarityColor;
+        sharedPromptText.text = $"{name} — {rarity}\n{stars}\nE to pick up";
+        SurvivorUiStyle.ApplyTextOnDark(sharedPromptText);
+        if (sharedBubbleOutline != null)
+            sharedBubbleOutline.color = rarityColor;
 
-        LayoutRebuilder.ForceRebuildLayoutImmediate(bubbleRoot);
-        promptCanvas.gameObject.SetActive(true);
-        promptVisible = true;
+        if (sharedPromptRoot != null)
+            LayoutRebuilder.ForceRebuildLayoutImmediate(sharedPromptRoot.GetComponent<RectTransform>());
     }
 
     private void HidePrompt()
     {
-        if (promptCanvas != null)
-            promptCanvas.gameObject.SetActive(false);
-        promptVisible = false;
+        if (activeOwner != this)
+            return;
+
+        activeOwner = null;
+        if (sharedPromptRoot != null)
+            sharedPromptRoot.SetActive(false);
     }
 
     private static bool IsPlayer(Collider other)

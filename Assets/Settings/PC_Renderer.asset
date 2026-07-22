@@ -1,5 +1,22 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-7713194149196871981
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd61db121c0af45e3a79ef5d7f09d770, type: 3}
+  m_Name: SurvivorStormDesaturateFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  shader: {fileID: 4800000, guid: 4259056084390493d8f30396a93cbf02, type: 3}
+  renderPassEvent: 550
+  edgeSoftness: 25
+  desaturateAmount: 1
 --- !u!114 &-6634879681406991414
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -69,7 +86,8 @@ MonoBehaviour:
   - {fileID: -1610389579927280703}
   - {fileID: -6634879681406991414}
   - {fileID: 6643026421398857049}
-  m_RendererFeatureMap: ad6b866f10d7b46cc1a3719235bfa6e9ca834736152ceca35965038155c5305c
+  - {fileID: -7713194149196871981}
+  m_RendererFeatureMap: ad6b866f10d7b46cc1a3719235bfa6e9ca834736152ceca35965038155c5305cd3c67f9dc93af594
   m_UseNativeRenderPass: 1
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}

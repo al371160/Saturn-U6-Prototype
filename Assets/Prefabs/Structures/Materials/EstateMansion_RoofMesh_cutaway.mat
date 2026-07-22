@@ -27,6 +27,7 @@ Material:
     m_Floats:
     - _CutoffSoftness: 0.15
     - _Fade: 0
+    - _InsideAlpha: 0.35
     m_Colors:
     - _BaseColor: {r: 0.28, g: 0.22, b: 0.2, a: 1}
   m_BuildTextureStacks: []

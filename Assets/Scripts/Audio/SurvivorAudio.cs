@@ -10,10 +10,16 @@ public static class SurvivorAudio
 
     public static void PlayHitForTarget(GameObject target)
     {
-        PlayHitForTarget(ResolveHitKind(target));
+        Vector3 pos = target != null ? target.transform.position : Vector3.zero;
+        PlayHitForTarget(ResolveHitKind(target), pos, useProximity: IsEnemyKind(ResolveHitKind(target)));
     }
 
     public static void PlayHitForTarget(SurvivorHitAudioKind kind)
+    {
+        PlayHitForTarget(kind, Vector3.zero, useProximity: false);
+    }
+
+    public static void PlayHitForTarget(SurvivorHitAudioKind kind, Vector3 worldPosition, bool useProximity)
     {
         PlayerAudioHub hub = PlayerAudioHub.Instance;
         PlayerAudioLibrary lib = hub != null ? hub.Library : null;
@@ -24,13 +30,13 @@ public static class SurvivorAudio
         if (profile != null && profile.HasAny)
         {
             if (profile.impact != null)
-                hub.PlayOneShot(profile.impact, profile.impactVolume);
+                PlayMaybeProximity(hub, profile.impact, profile.impactVolume, worldPosition, useProximity);
             if (profile.react != null)
-                hub.PlayOneShot(profile.react, profile.reactVolume);
+                PlayMaybeProximity(hub, profile.react, profile.reactVolume, worldPosition, useProximity);
             return;
         }
 
-        hub.PlayOneShot(lib.hitImpact, 0.45f);
+        PlayMaybeProximity(hub, lib.hitImpact, 0.45f, worldPosition, useProximity);
     }
 
     public static void PlayCrateHit()
@@ -50,10 +56,17 @@ public static class SurvivorAudio
 
     public static void PlayDestroyForTarget(GameObject target)
     {
-        PlayDestroyForTarget(ResolveHitKind(target));
+        SurvivorHitAudioKind kind = ResolveHitKind(target);
+        Vector3 pos = target != null ? target.transform.position : Vector3.zero;
+        PlayDestroyForTarget(kind, pos, useProximity: IsEnemyKind(kind));
     }
 
     public static void PlayDestroyForTarget(SurvivorHitAudioKind kind)
+    {
+        PlayDestroyForTarget(kind, Vector3.zero, useProximity: false);
+    }
+
+    public static void PlayDestroyForTarget(SurvivorHitAudioKind kind, Vector3 worldPosition, bool useProximity)
     {
         PlayerAudioHub hub = PlayerAudioHub.Instance;
         PlayerAudioLibrary lib = hub != null ? hub.Library : null;
@@ -63,17 +76,32 @@ public static class SurvivorAudio
         SurvivorHitSfx profile = lib.GetHitProfile(kind);
         if (profile != null && profile.destroy != null)
         {
-            hub.PlayOneShot(profile.destroy, profile.destroyVolume);
+            PlayMaybeProximity(hub, profile.destroy, profile.destroyVolume, worldPosition, useProximity);
             return;
         }
 
         if (kind == SurvivorHitAudioKind.Crate && lib.crateShatter != null)
         {
-            hub.PlayOneShot(lib.crateShatter, 0.8f);
+            PlayMaybeProximity(hub, lib.crateShatter, 0.8f, worldPosition, useProximity);
             return;
         }
 
-        hub.PlayOneShot(lib.hitImpact, 0.6f);
+        PlayMaybeProximity(hub, lib.hitImpact, 0.6f, worldPosition, useProximity);
+    }
+
+    private static bool IsEnemyKind(SurvivorHitAudioKind kind)
+    {
+        return kind == SurvivorHitAudioKind.Enemy
+            || kind == SurvivorHitAudioKind.Elite
+            || kind == SurvivorHitAudioKind.Boss;
+    }
+
+    private static void PlayMaybeProximity(PlayerAudioHub hub, AudioClip clip, float volume, Vector3 worldPosition, bool useProximity)
+    {
+        if (useProximity)
+            hub.PlayOneShotAt(clip, worldPosition, volume, randomize: true);
+        else
+            hub.PlayOneShot(clip, volume);
     }
 
     public static void PlayWeaponPickup()

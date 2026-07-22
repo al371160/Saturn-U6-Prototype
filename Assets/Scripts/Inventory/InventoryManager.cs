@@ -414,6 +414,30 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
+    /// <summary>Selects the first populated slot if nothing is already selected, so the shared
+    /// description panel isn't left blank after a quiet batch sync (e.g. Survivor loadout via
+    /// UpsertItemQuiet) that never routes through a slot's OnPointerClick.</summary>
+    public void EnsureSlotSelected()
+    {
+        if (itemSlot == null)
+            return;
+
+        for (int i = 0; i < itemSlot.Length; i++)
+        {
+            if (itemSlot[i] != null && itemSlot[i].thisItemSelected)
+                return;
+        }
+
+        for (int i = 0; i < itemSlot.Length; i++)
+        {
+            if (itemSlot[i] != null && itemSlot[i].quantity > 0)
+            {
+                itemSlot[i].SelectSlot();
+                return;
+            }
+        }
+    }
+
 
     public ItemSO GetItemSO(string itemName)
     {

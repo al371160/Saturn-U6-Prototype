@@ -5,9 +5,8 @@ using UnityEngine;
 /// player's own facing (which PlayerController now turns to match movement/arrow-key input instead).
 /// All three SurvivorFollowCameraRig views read CameraYaw; only the freefall glide camera reads
 /// CameraPitch (via its useDynamicPitch flag) since the shoulder/top-down views use a fixed pitch.
-/// Also manages cursor lock/visibility per active view: locked+hidden for the over-the-shoulder
-/// view (classic FPS mouselook), free+visible for the top-down view — and always free+visible
-/// whenever an upgrade/level-up menu is open, regardless of view, so its buttons are clickable.
+/// Cursor: locked+hidden for shoulder; unlocked+hidden for top-down (mouse moves freely for aim,
+/// system cursor stays invisible). Free+visible only while an upgrade/level-up menu is open.
 /// </summary>
 public class SurvivorMouseAimRig : MonoBehaviour
 {
@@ -56,15 +55,15 @@ public class SurvivorMouseAimRig : MonoBehaviour
 
     private void ApplyCursorState()
     {
-        if (!menuOpen && shoulderViewActive)
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
-        else
+        if (menuOpen)
         {
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
+            return;
         }
+
+        Cursor.visible = false;
+        // Shoulder: classic locked mouselook. Top-down: free mouse for aim, cursor still hidden.
+        Cursor.lockState = shoulderViewActive ? CursorLockMode.Locked : CursorLockMode.None;
     }
 }

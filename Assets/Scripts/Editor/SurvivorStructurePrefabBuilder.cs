@@ -302,7 +302,43 @@ public static class SurvivorStructurePrefabBuilder
         BuildingCutawayController cutaway = root.GetComponent<BuildingCutawayController>();
         if (cutaway != null)
             cutaway.AutoCollectFadeRenderers();
-        Finish(root, landmarkName, mapColor, spawnCount, activationRadius);
+
+        // Enterable buildings must not carve a solid box over the whole footprint (that blocks the
+        // doorway too and enemies path clean into the walls trying to reach the player who just
+        // walked through it). Carve each wall piece individually instead so the door opening stays
+        // clear — see SurvivorBuildingNavAccess for the runtime-side fix on already-placed prefabs.
+        AddWallCarveObstacles(root);
+        Finish(root, landmarkName, mapColor, spawnCount, activationRadius, carveRootFootprint: false);
+    }
+
+    /// <summary>Adds a carving NavMeshObstacle to every wall piece under Walls_Fadeable / Walls_Solid
+    /// (never Floor, Doorway, or Interior), so the doorway gap remains open for pathing.</summary>
+    private static void AddWallCarveObstacles(GameObject root)
+    {
+        AddWallCarveObstaclesUnder(Find(root, "Exterior/Walls_Fadeable"));
+        AddWallCarveObstaclesUnder(Find(root, "Exterior/Walls_Solid"));
+    }
+
+    private static void AddWallCarveObstaclesUnder(Transform wallsParent)
+    {
+        if (wallsParent == null)
+            return;
+
+        for (int i = 0; i < wallsParent.childCount; i++)
+        {
+            Transform wall = wallsParent.GetChild(i);
+            UnityEngine.AI.NavMeshObstacle obstacle = wall.GetComponent<UnityEngine.AI.NavMeshObstacle>();
+            if (obstacle == null)
+                obstacle = wall.gameObject.AddComponent<UnityEngine.AI.NavMeshObstacle>();
+
+            obstacle.carving = true;
+            obstacle.carveOnlyStationary = true;
+            obstacle.shape = UnityEngine.AI.NavMeshObstacleShape.Box;
+            // Wall pieces are primitive cubes whose default BoxCollider is size 1 / center 0 and
+            // whose world footprint comes entirely from localScale — the obstacle box works the same way.
+            obstacle.center = Vector3.zero;
+            obstacle.size = Vector3.one;
+        }
     }
 
     // --- Shared helpers ---------------------------------------------------
@@ -401,7 +437,7 @@ public static class SurvivorStructurePrefabBuilder
             mat.SetColor("_BaseColor", color);
     }
 
-    private static void Finish(GameObject root, string landmarkName, Color mapColor, int spawnCount, float activationRadius)
+    private static void Finish(GameObject root, string landmarkName, Color mapColor, int spawnCount, float activationRadius, bool carveRootFootprint = true)
     {
         SurvivorLandmarkMarker landmark = root.GetComponent<SurvivorLandmarkMarker>();
         if (landmark == null)
@@ -416,27 +452,32 @@ public static class SurvivorStructurePrefabBuilder
         spawner.activationRadius = activationRadius;
         spawner.oneShot = true;
 
-        // Carve footprint so enemies path around walls when NavMeshAgent is used.
-        UnityEngine.AI.NavMeshObstacle obstacle = root.GetComponent<UnityEngine.AI.NavMeshObstacle>();
-        if (obstacle == null)
-            obstacle = root.AddComponent<UnityEngine.AI.NavMeshObstacle>();
-        obstacle.carving = true;
-        obstacle.carveOnlyStationary = true;
-        obstacle.shape = UnityEngine.AI.NavMeshObstacleShape.Box;
-        Collider[] cols = root.GetComponentsInChildren<Collider>();
-        if (cols.Length > 0)
+        // Non-enterable structures have no doorway to keep clear, so a single full-footprint carve
+        // is fine and cheaper than per-piece obstacles. Enterable buildings carve per-wall instead
+        // (see AddWallCarveObstacles) so enemies can still path in through the door.
+        if (carveRootFootprint)
         {
-            Bounds b = cols[0].bounds;
-            for (int i = 1; i < cols.Length; i++)
-                b.Encapsulate(cols[i].bounds);
-            obstacle.center = root.transform.InverseTransformPoint(b.center);
-            Vector3 size = root.transform.InverseTransformVector(b.size);
-            obstacle.size = new Vector3(Mathf.Abs(size.x), Mathf.Abs(size.y), Mathf.Abs(size.z));
-        }
-        else
-        {
-            obstacle.center = new Vector3(0f, 2f, 0f);
-            obstacle.size = new Vector3(10f, 4f, 10f);
+            UnityEngine.AI.NavMeshObstacle obstacle = root.GetComponent<UnityEngine.AI.NavMeshObstacle>();
+            if (obstacle == null)
+                obstacle = root.AddComponent<UnityEngine.AI.NavMeshObstacle>();
+            obstacle.carving = true;
+            obstacle.carveOnlyStationary = true;
+            obstacle.shape = UnityEngine.AI.NavMeshObstacleShape.Box;
+            Collider[] cols = root.GetComponentsInChildren<Collider>();
+            if (cols.Length > 0)
+            {
+                Bounds b = cols[0].bounds;
+                for (int i = 1; i < cols.Length; i++)
+                    b.Encapsulate(cols[i].bounds);
+                obstacle.center = root.transform.InverseTransformPoint(b.center);
+                Vector3 size = root.transform.InverseTransformVector(b.size);
+                obstacle.size = new Vector3(Mathf.Abs(size.x), Mathf.Abs(size.y), Mathf.Abs(size.z));
+            }
+            else
+            {
+                obstacle.center = new Vector3(0f, 2f, 0f);
+                obstacle.size = new Vector3(10f, 4f, 10f);
+            }
         }
 
         string path = PrefabFolder + "/" + root.name + ".prefab";

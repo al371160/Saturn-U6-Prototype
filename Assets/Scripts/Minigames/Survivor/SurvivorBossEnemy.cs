@@ -463,7 +463,41 @@ public class SurvivorBossEnemy : MonoBehaviour, ISurvivorDamageable, ISurvivorSt
     private void Die()
     {
         SurvivorAudio.PlayDestroyForTarget(SurvivorHitAudioKind.Boss);
+        SpawnUpgradePickup();
         controller?.RegisterBossDefeated(this, data != null ? data.bossXPReward : 0);
         Destroy(gameObject);
+    }
+
+    /// <summary>Boss kills reliably reward a random buff pickup — the only place buffs (aside from
+    /// dedicated scope structures) still drop as ground loot rather than a level-up choice.</summary>
+    private void SpawnUpgradePickup()
+    {
+        if (controller == null || controller.config == null)
+            return;
+
+        SurvivorBuffDataSO[] buffs = controller.config.availableBuffs;
+        if (buffs == null || buffs.Length == 0)
+            return;
+
+        SurvivorBuffDataSO chosen = buffs[Random.Range(0, buffs.Length)];
+        if (chosen == null)
+            return;
+
+        GameObject pickupObject = new GameObject("SurvivorUpgradePickup");
+        pickupObject.transform.position = transform.position + Vector3.up * 0.8f;
+
+        SphereCollider col = pickupObject.AddComponent<SphereCollider>();
+        col.isTrigger = true;
+        col.radius = 0.45f;
+
+        GameObject visual = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        visual.transform.SetParent(pickupObject.transform, false);
+        visual.transform.localScale = Vector3.one * 0.65f;
+        Object.Destroy(visual.GetComponent<Collider>());
+        Renderer visualRenderer = visual.GetComponent<Renderer>();
+        if (visualRenderer != null)
+            visualRenderer.material.color = chosen.iconColor;
+
+        pickupObject.AddComponent<SurvivorUpgradePickup>().Initialize(controller, playerTarget, chosen, 8f);
     }
 }

@@ -9,6 +9,10 @@ using UnityEngine;
 /// </summary>
 public class SurvivorStormController : MonoBehaviour
 {
+    /// <summary>Live lookup for renderer-feature/UI code that can't hold a scene reference
+    /// (e.g. SurvivorStormDesaturatePass lives on a Renderer Data asset, not a GameObject).</summary>
+    public static SurvivorStormController Instance { get; private set; }
+
     [System.Serializable]
     public struct StormPhase
     {
@@ -38,10 +42,35 @@ public class SurvivorStormController : MonoBehaviour
     public float CurrentRadius { get; private set; }
     public bool HasFullyClosed { get; private set; }
 
+    /// <summary>World-space storm center (XZ matters most — flattened distance checks ignore Y).</summary>
+    public Vector3 CenterPosition => stormCenter != null ? stormCenter.position : Vector3.zero;
+
+    /// <summary>Seconds left in the currently-shrinking phase (0 once the storm has fully closed).</summary>
+    public float PhaseTimeRemaining => currentPhaseIndex >= phases.Length ? 0f : Mathf.Max(0f, phases[currentPhaseIndex].durationSeconds - phaseElapsed);
+
+    /// <summary>Alias of PhaseTimeRemaining — kept for map/HUD callers that expect this name.</summary>
+    public float PhaseRemainingSeconds => PhaseTimeRemaining;
+
+    public float CurrentPhaseDuration => currentPhaseIndex < phases.Length ? phases[currentPhaseIndex].durationSeconds : 0f;
+
+    public int CurrentPhaseIndex => currentPhaseIndex;
+
     private int currentPhaseIndex;
     private float phaseElapsed;
     private float phaseStartRadius;
     private float damageTickTimer;
+    private SurvivorStormVisuals visuals;
+
+    private void Awake()
+    {
+        Instance = this;
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+    }
 
     private void Start()
     {
@@ -54,6 +83,25 @@ public class SurvivorStormController : MonoBehaviour
             controller = FindFirstObjectByType<SurvivorMinigameController>();
         if (player == null)
             player = FindFirstObjectByType<SurvivorMinigamePlayer>();
+
+        EnsureVisuals();
+    }
+
+    /// <summary>Builds the storm-wall/ash presentation layer if the scene doesn't already have one —
+    /// mirrors SurvivorMinigameController's EnsureX pattern so this works with no manual scene setup.</summary>
+    private void EnsureVisuals()
+    {
+        if (visuals != null)
+            return;
+
+        visuals = FindFirstObjectByType<SurvivorStormVisuals>();
+        if (visuals == null)
+        {
+            GameObject visualsObject = new GameObject("SurvivorStormVisuals");
+            visuals = visualsObject.AddComponent<SurvivorStormVisuals>();
+        }
+
+        visuals.Initialize(this);
     }
 
     private void Update()
@@ -91,8 +139,6 @@ public class SurvivorStormController : MonoBehaviour
             currentPhaseIndex++;
         }
     }
-
-    private Vector3 CenterPosition => stormCenter != null ? stormCenter.position : Vector3.zero;
 
     private float DistanceFraction(Vector3 position)
     {

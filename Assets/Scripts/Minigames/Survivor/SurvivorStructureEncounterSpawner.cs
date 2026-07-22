@@ -48,9 +48,23 @@ public class SurvivorStructureEncounterSpawner : MonoBehaviour
     }
 
     /// <summary>Carve this structure's footprint out of the NavMesh so agents path around walls
-    /// even if the bake didn't include post-placed prefabs.</summary>
+    /// even if the bake didn't include post-placed prefabs. Enterable buildings (BuildingInteriorZone /
+    /// BuildingCutawayController present) skip the full-box carve entirely — that box covers the
+    /// doorway too and sends enemies straight into the wall instead of through it — and instead rely
+    /// on per-wall carving via SurvivorBuildingNavAccess, which also fixes any older placed prefab
+    /// that still has the full-box carve baked in.</summary>
     private void EnsureNavMeshObstacle()
     {
+        bool isEnterable = GetComponent<BuildingInteriorZone>() != null
+            || GetComponentInChildren<BuildingInteriorZone>() != null
+            || GetComponent<BuildingCutawayController>() != null;
+
+        if (isEnterable)
+        {
+            SurvivorBuildingNavAccess.Fix(gameObject);
+            return;
+        }
+
         NavMeshObstacle obstacle = GetComponent<NavMeshObstacle>();
         if (obstacle == null)
             obstacle = gameObject.AddComponent<NavMeshObstacle>();

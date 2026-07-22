@@ -10,6 +10,7 @@ public class SurvivorMinigameSpawner : MonoBehaviour
     private float spawnTimer;
     private float currentSpawnInterval;
     private float despawnCheckTimer;
+    private float matchElapsed;
 
     public void Initialize(
         SurvivorMinigameController owner,
@@ -26,12 +27,15 @@ public class SurvivorMinigameSpawner : MonoBehaviour
         currentSpawnInterval = config.spawnInterval;
         spawnTimer = 0.5f;
         despawnCheckTimer = 1f;
+        matchElapsed = 0f;
     }
 
     private void Update()
     {
         if (controller == null || !controller.IsRunning || controller.IsPaused || config == null || player == null)
             return;
+
+        matchElapsed += Time.deltaTime;
 
         despawnCheckTimer -= Time.deltaTime;
         if (despawnCheckTimer <= 0f)
@@ -80,6 +84,7 @@ public class SurvivorMinigameSpawner : MonoBehaviour
         enemyObject.SetActive(true);
 
         SurvivorMinigameEnemy enemy = enemyObject.GetComponent<SurvivorMinigameEnemy>();
+        SurvivorEnemyArchetype archetype = SurvivorEnemyTierList.Pick(matchElapsed);
         enemy.Initialize(
             controller,
             player,
@@ -90,9 +95,17 @@ public class SurvivorMinigameSpawner : MonoBehaviour
             config.groundMask,
             config.groundSnapRayHeight,
             groundOffset,
-            config.groundSnapInterval);
+            config.groundSnapInterval,
+            archetype);
 
-        if (allowElite && controller.enemyEliteness > 0f && Random.value < controller.enemyEliteness)
+        // Late tiers get more elites; skirmishers often elite-tinted.
+        float eliteChance = controller.enemyEliteness;
+        if (matchElapsed >= 660f)
+            eliteChance = Mathf.Max(eliteChance, 0.35f);
+        if (archetype == SurvivorEnemyArchetype.Skirmisher)
+            eliteChance = Mathf.Max(eliteChance, 0.5f);
+
+        if (allowElite && eliteChance > 0f && Random.value < eliteChance)
             enemy.MakeElite();
 
         return enemy;

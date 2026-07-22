@@ -117,6 +117,7 @@ public class SurvivorMinigameController : MonoBehaviour
     private int pendingLevelUps;
     private int killCount;
     private SurvivorPauseShield pauseShield;
+    private SurvivorCombatHudUI combatHudUI;
 
     private void Awake()
     {
@@ -230,6 +231,7 @@ public class SurvivorMinigameController : MonoBehaviour
     private void BeginCombat()
     {
         EnsurePlayerSystemsReady();
+        EnsureStormRoundRulesWired();
 
         spawner.Initialize(this, config, minigamePlayer.transform, enemyRoot, enemyTemplate);
         SpawnWorldPropsIfNeeded();
@@ -239,6 +241,16 @@ public class SurvivorMinigameController : MonoBehaviour
         RefreshHud();
 
         ApplySessionOrDefaultLoadout();
+    }
+
+    private void EnsureStormRoundRulesWired()
+    {
+        if (roundRules != null)
+            return;
+
+        SurvivorStormRoundRules stormRules = FindFirstObjectByType<SurvivorStormRoundRules>();
+        if (stormRules != null)
+            SetRoundRules(stormRules);
     }
 
     /// <summary>Trees / crates / ground weapons — once per run. Called on bus board (or BeginCombat if no bus).</summary>
@@ -251,6 +263,15 @@ public class SurvivorMinigameController : MonoBehaviour
         SpawnForestTrees();
         SpawnLootCrates();
         SpawnGroundWeapons();
+        SpawnConsumablePickups();
+
+        Transform pickupTarget = worldPlayer != null ? worldPlayer.transform : minigamePlayer != null ? minigamePlayer.transform : null;
+        SurvivorWorldDressingSpawner.Spawn(config, this);
+        SurvivorInteriorFiller.FillAll(this, config, pickupTarget);
+
+        // Safety net for enterable structures whose NavMeshObstacle still carves the full footprint
+        // (older placed prefabs) — see SurvivorBuildingNavAccess.
+        SurvivorBuildingNavAccess.EnsureBootstrapped();
     }
 
     /// <summary>Uses MatchSessionState loadout from the menu when present; otherwise config defaults.
@@ -461,6 +482,51 @@ public class SurvivorMinigameController : MonoBehaviour
         }
     }
 
+    /// <summary>A handful of rare Full Heal / Nuke finds scattered across the map — ground-only,
+    /// never offered on the level-up screen anymore (see SurvivorUpgradePool).</summary>
+    private void SpawnConsumablePickups()
+    {
+        Vector3[] shuffled = ShuffleAreas(GetPredeterminedCrateAreas());
+        const int consumableCount = 6;
+        int spawnCount = Mathf.Min(consumableCount, shuffled.Length);
+
+        Transform pickupTarget = worldPlayer != null ? worldPlayer.transform : minigamePlayer != null ? minigamePlayer.transform : null;
+
+        for (int i = 0; i < spawnCount; i++)
+        {
+            Vector3 area = shuffled[i];
+            Vector2 jitter = Random.insideUnitCircle * 10f + new Vector2(-8f, 6f);
+            Vector3 spawnPosition = area + new Vector3(jitter.x, 0f, jitter.y);
+            spawnPosition = SurvivorGroundUtility.SnapToGround(spawnPosition, config.groundMask, config.groundSnapRayHeight, 0.5f);
+
+            SurvivorConsumableType type = i % 2 == 0 ? SurvivorConsumableType.FullHeal : SurvivorConsumableType.Nuke;
+            SpawnConsumablePickup(type, spawnPosition, pickupTarget);
+        }
+    }
+
+    private void SpawnConsumablePickup(SurvivorConsumableType type, Vector3 position, Transform pickupTarget)
+    {
+        GameObject pickupObject = new GameObject($"SurvivorConsumablePickup_{type}");
+        pickupObject.transform.position = position;
+        SphereCollider col = pickupObject.AddComponent<SphereCollider>();
+        col.isTrigger = true;
+        col.radius = 0.45f;
+
+        GameObject visual = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+        visual.transform.SetParent(pickupObject.transform, false);
+        visual.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+        Destroy(visual.GetComponent<Collider>());
+        Renderer visualRenderer = visual.GetComponent<Renderer>();
+        if (visualRenderer != null)
+        {
+            visualRenderer.material.color = type == SurvivorConsumableType.FullHeal
+                ? new Color(0.35f, 0.95f, 0.45f)
+                : new Color(1f, 0.5f, 0.2f);
+        }
+
+        pickupObject.AddComponent<SurvivorConsumablePickup>().Initialize(this, pickupTarget, type, 6f);
+    }
+
     private static Vector3[] ShuffleAreas(Vector3[] source)
     {
         Vector3[] shuffled = (Vector3[])source.Clone();
@@ -610,12 +676,22 @@ public class SurvivorMinigameController : MonoBehaviour
 
         minigamePlayer.Initialize(this, config);
 
+        SurvivorAnimatorBootstrap animBootstrap = player.GetComponent<SurvivorAnimatorBootstrap>();
+        if (animBootstrap == null)
+            animBootstrap = player.gameObject.AddComponent<SurvivorAnimatorBootstrap>();
+        animBootstrap.animator = player.playerAnim;
+        animBootstrap.playerController = player;
+        animBootstrap.upperBodyAimRig = player.GetComponentInChildren<SurvivorUpperBodyAimRig>();
+
         // Not parented to the player — SurvivorWeaponManager tracks the player's position
         // only (see Initialize), so auto weapons don't inherit the player's look rotation.
         GameObject weaponManagerObject = new GameObject("SurvivorWeaponManager");
         weaponManagerObject.transform.SetParent(transform, false);
         weaponManager = weaponManagerObject.AddComponent<SurvivorWeaponManager>();
         weaponManager.Initialize(this, player.transform);
+
+        BuildHudIfMissing();
+        EnsureCombatHud();
     }
 
     public void RegisterKill()
@@ -906,12 +982,16 @@ public class SurvivorMinigameController : MonoBehaviour
         }
 
         BuildHudIfMissing();
+        EnsureCombatHud();
     }
 
     private void BuildHudIfMissing()
     {
         if (hudCanvas != null)
+        {
+            EnsureCombatHud();
             return;
+        }
 
         GameObject canvasObject = new GameObject("SurvivorHud");
         canvasObject.transform.SetParent(transform, false);
@@ -937,6 +1017,20 @@ public class SurvivorMinigameController : MonoBehaviour
         EnsureStaminaDotsHud(canvasObject.transform);
         xpBar = BuildBar(canvasObject.transform, "XPBar", new Vector2(0f, 46f), new Color(0.55f, 0.65f, 0.95f));
         levelBarText = BuildLabeledBar(canvasObject.transform, "LevelBar", new Vector2(0f, 24f), new Color(0.7f, 0.5f, 0.9f), "Lv. 1");
+        EnsureCombatHud();
+    }
+
+    private void EnsureCombatHud()
+    {
+        if (hudCanvas == null)
+            return;
+
+        if (combatHudUI == null)
+            combatHudUI = hudCanvas.GetComponent<SurvivorCombatHudUI>();
+        if (combatHudUI == null)
+            combatHudUI = hudCanvas.gameObject.AddComponent<SurvivorCombatHudUI>();
+
+        combatHudUI.EnsureBuilt(hudCanvas.transform);
     }
 
     private void HideLegacyStaminaBars()

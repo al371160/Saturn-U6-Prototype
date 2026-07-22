@@ -3,21 +3,35 @@ using UnityEngine;
 
 public class SurvivorWeaponManager : MonoBehaviour
 {
+    public const int MaxWeapons = 10;
+
     private SurvivorMinigameController controller;
     private Transform manualWeaponRoot;
     private readonly Dictionary<string, SurvivorWeaponBehavior> equippedWeapons = new Dictionary<string, SurvivorWeaponBehavior>();
 
     public IReadOnlyCollection<SurvivorWeaponBehavior> EquippedWeapons => equippedWeapons.Values;
+    public int EquippedCount => equippedWeapons.Count;
 
-    /// <summary>Toggled with E. While locked, no weapons fire. While unlocked, only holding LMB
-    /// fires any weapon (manual aim also redirects toward the cursor).</summary>
-    public static bool FireLocked { get; private set; }
-    public KeyCode fireLockToggleKey = KeyCode.E;
+    /// <summary>
+    /// Sticky auto-fire flag for the match. When true, all weapons fire without holding LMB
+    /// (except pause forcefield). Survives weapon pickups. Toggle with Q (not E — E is pickup).
+    /// </summary>
+    public static bool AutoFireEnabled { get; private set; } = true;
+
+    public KeyCode autoFireToggleKey = KeyCode.Q;
+
+    /// <summary>Legacy alias — true means weapons are silenced (auto-fire off and not holding LMB).</summary>
+    public static bool FireLocked => !AutoFireEnabled;
 
     private void Update()
     {
-        if (Input.GetKeyDown(fireLockToggleKey))
-            FireLocked = !FireLocked;
+        if (Input.GetKeyDown(autoFireToggleKey))
+            AutoFireEnabled = !AutoFireEnabled;
+    }
+
+    public static void SetAutoFireEnabled(bool enabled)
+    {
+        AutoFireEnabled = enabled;
     }
 
     /// <summary>Global multipliers layered on top of every weapon's own star-based stats, driven by buffs.</summary>
@@ -90,7 +104,12 @@ public class SurvivorWeaponManager : MonoBehaviour
         if (equippedWeapons.TryGetValue(data.weaponId, out SurvivorWeaponBehavior weapon))
             return !weapon.IsMaxStar || HasAvailableBranch(data, weapon.StarLevel);
 
-        return true;
+        return EquippedCount < MaxWeapons;
+    }
+
+    public bool CanEquipNewWeapon()
+    {
+        return EquippedCount < MaxWeapons;
     }
 
     private static bool HasAvailableBranch(SurvivorWeaponDataSO data, int currentStar)
@@ -114,10 +133,10 @@ public class SurvivorWeaponManager : MonoBehaviour
 
     /// <summary>Equip at startStar, or if already owned raise to max(current, startStar) then +1 if equal
     /// only when startStar is the default upgrade path (startStar &lt;= current). Drop pickup uses max.</summary>
-    public void EquipOrUpgrade(SurvivorWeaponDataSO data, int startStar)
+    public bool EquipOrUpgrade(SurvivorWeaponDataSO data, int startStar)
     {
         if (data == null || controller == null)
-            return;
+            return false;
 
         int desiredStar = Mathf.Clamp(startStar, 1, data.MaxStar);
 
@@ -129,13 +148,17 @@ public class SurvivorWeaponManager : MonoBehaviour
                 UpgradeWeapon(weapon);
 
             controller.NotifyLoadoutChanged();
-            return;
+            return true;
         }
+
+        if (EquippedCount >= MaxWeapons)
+            return false;
 
         SurvivorWeaponBehavior newWeapon = CreateWeaponBehavior(data);
         newWeapon.Initialize(controller, data, desiredStar);
         equippedWeapons[data.weaponId] = newWeapon;
         controller.NotifyLoadoutChanged();
+        return true;
     }
 
     /// <summary>Replaces an equipped weapon with a specific evolution branch target — called from a

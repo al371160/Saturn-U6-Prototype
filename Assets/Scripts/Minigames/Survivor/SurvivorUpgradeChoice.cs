@@ -75,7 +75,9 @@ public static class SurvivorUpgradePool
         {
             foreach (SurvivorBuffDataSO buff in config.availableBuffs)
             {
-                if (buff == null)
+                // Scope/CameraZoom buffs are reserved for SurvivorCraneLoot / SurvivorScopeStructure /
+                // boss drops (SurvivorUpgradePickup) — never offered on the level-up screen.
+                if (buff == null || buff.buffType == SurvivorBuffType.CameraZoom)
                     continue;
 
                 SurvivorBuffDataSO capturedBuff = buff;
@@ -84,6 +86,7 @@ public static class SurvivorUpgradePool
         }
 
         AddInstantItems(pool);
+        AddStatChoices(pool);
 
         Shuffle(pool);
 
@@ -91,26 +94,45 @@ public static class SurvivorUpgradePool
         return pool.GetRange(0, count);
     }
 
-    /// <summary>One-shot consumable choices — apply an instant effect rather than a persistent stat.</summary>
+    /// <summary>One-shot consumable choices — apply an instant effect rather than a persistent stat.
+    /// Full Heal and Nuke moved to ground-only SurvivorConsumablePickup finds; the level-up screen
+    /// keeps only the utility pick that doesn't trivialize a level-up.</summary>
     private static void AddInstantItems(List<SurvivorUpgradeChoice> pool)
     {
-        pool.Add(new SurvivorUpgradeChoice(
-            "Full Heal",
-            "Instantly restore all missing health.",
-            new Color(0.35f, 0.95f, 0.45f), null,
-            c => c.MinigamePlayer?.Heal(c.MinigamePlayer.MaxHealth)));
-
         pool.Add(new SurvivorUpgradeChoice(
             "Loot Magnet",
             "Instantly collect every XP gem on the field.",
             new Color(0.9f, 0.75f, 0.3f), null,
             c => c.CollectAllGems()));
+    }
+
+    /// <summary>Always-available flat stat picks so every level-up has a reliable, boring-but-solid
+    /// fallback alongside weapon upgrades and buffs.</summary>
+    private static void AddStatChoices(List<SurvivorUpgradeChoice> pool)
+    {
+        pool.Add(new SurvivorUpgradeChoice(
+            "Vitality",
+            "+20 Max HP.",
+            new Color(0.35f, 0.95f, 0.45f), null,
+            c => c.MinigamePlayer?.ApplyMaxHealthBonus(20f)));
 
         pool.Add(new SurvivorUpgradeChoice(
-            "Nuke",
-            "A wide blast damages every enemy on the field.",
-            new Color(1f, 0.5f, 0.2f), null,
-            c => c.NukeAllEnemies(200f)));
+            "Might",
+            "+10% weapon damage.",
+            new Color(0.95f, 0.35f, 0.3f), null,
+            c => c.WeaponManager?.AddDamageMultiplier(0.10f)));
+
+        pool.Add(new SurvivorUpgradeChoice(
+            "Swiftness",
+            "+8% move speed.",
+            new Color(0.4f, 0.75f, 1f), null,
+            c => c.MinigamePlayer?.ApplyMoveSpeedBonus(0.08f)));
+
+        pool.Add(new SurvivorUpgradeChoice(
+            "Alacrity",
+            "+10% attack speed.",
+            new Color(0.85f, 0.6f, 1f), null,
+            c => c.WeaponManager?.AddRateMultiplier(0.10f)));
     }
 
     private static void Shuffle(List<SurvivorUpgradeChoice> list)

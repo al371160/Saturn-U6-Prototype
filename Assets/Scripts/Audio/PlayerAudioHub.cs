@@ -9,8 +9,11 @@ public class PlayerAudioHub : MonoBehaviour
 {
     public static PlayerAudioHub Instance { get; private set; }
 
+    public const float MaxOneShotVolume = 0.85f;
+
     [SerializeField] private PlayerAudioLibrary library;
     [SerializeField] private AudioSource oneShotSource;
+    [SerializeField] private AudioSource proximitySource;
     [SerializeField] private AudioSource loopSource;
     [SerializeField] private AudioSource ambientCombatSource;
     [SerializeField] private AudioSource ambientBedSource;
@@ -53,22 +56,25 @@ public class PlayerAudioHub : MonoBehaviour
     private void Bootstrap()
     {
         if (oneShotSource == null)
-            oneShotSource = CreateSource("OneShot", loop: false);
+            oneShotSource = CreateSource("OneShot", loop: false, spatial: false);
+
+        if (proximitySource == null)
+            proximitySource = CreateSource("ProximityOneShot", loop: false, spatial: true);
 
         if (loopSource == null)
-            loopSource = CreateSource("MovementLoop", loop: true);
+            loopSource = CreateSource("MovementLoop", loop: true, spatial: false);
 
         if (ambientCombatSource == null)
-            ambientCombatSource = CreateSource("AmbientCombat", loop: true);
+            ambientCombatSource = CreateSource("AmbientCombat", loop: true, spatial: false);
 
         if (ambientBedSource == null)
-            ambientBedSource = CreateSource("AmbientBed", loop: true);
+            ambientBedSource = CreateSource("AmbientBed", loop: true, spatial: false);
 
         if (windSource == null)
-            windSource = CreateSource("WindLoop", loop: true);
+            windSource = CreateSource("WindLoop", loop: true, spatial: false);
 
         if (glideSource == null)
-            glideSource = CreateSource("GlideLoop", loop: true);
+            glideSource = CreateSource("GlideLoop", loop: true, spatial: false);
 
         if (library == null)
         {
@@ -78,14 +84,22 @@ public class PlayerAudioHub : MonoBehaviour
         }
     }
 
-    private AudioSource CreateSource(string childName, bool loop)
+    private AudioSource CreateSource(string childName, bool loop, bool spatial = false)
     {
         GameObject child = new GameObject(childName);
         child.transform.SetParent(transform, false);
         AudioSource source = child.AddComponent<AudioSource>();
         source.playOnAwake = false;
         source.loop = loop;
-        source.spatialBlend = 0f;
+        source.spatialBlend = spatial ? 1f : 0f;
+        if (spatial)
+        {
+            source.rolloffMode = AudioRolloffMode.Linear;
+            source.minDistance = 4f;
+            source.maxDistance = 42f;
+            source.dopplerLevel = 0f;
+        }
+
         return source;
     }
 
@@ -99,7 +113,28 @@ public class PlayerAudioHub : MonoBehaviour
         if (clip == null || oneShotSource == null)
             return;
 
-        oneShotSource.PlayOneShot(clip, volume);
+        float clamped = Mathf.Clamp(volume, 0f, MaxOneShotVolume);
+        float previousPitch = oneShotSource.pitch;
+        oneShotSource.pitch = 1f;
+        oneShotSource.PlayOneShot(clip, clamped);
+        oneShotSource.pitch = previousPitch;
+    }
+
+    /// <summary>3D one-shot at a world position with light pitch/volume randomization (enemy SFX).</summary>
+    public void PlayOneShotAt(AudioClip clip, Vector3 worldPosition, float volume = 1f, bool randomize = true)
+    {
+        if (clip == null || proximitySource == null)
+            return;
+
+        float vol = Mathf.Clamp(volume, 0f, MaxOneShotVolume);
+        if (randomize)
+            vol *= Random.Range(0.82f, 1f);
+
+        proximitySource.transform.position = worldPosition;
+        float previousPitch = proximitySource.pitch;
+        proximitySource.pitch = randomize ? Random.Range(0.9f, 1.12f) : 1f;
+        proximitySource.PlayOneShot(clip, vol);
+        proximitySource.pitch = previousPitch;
     }
 
     public void PlayLibrary(System.Func<PlayerAudioLibrary, AudioClip> selector, float volume = 1f)
@@ -173,14 +208,15 @@ public class PlayerAudioHub : MonoBehaviour
         if (source == null || clip == null)
             return;
 
+        float clamped = Mathf.Clamp(volume, 0f, MaxOneShotVolume);
         if (source.isPlaying && source.clip == clip)
         {
-            source.volume = volume;
+            source.volume = clamped;
             return;
         }
 
         source.clip = clip;
-        source.volume = volume;
+        source.volume = clamped;
         source.Play();
     }
 

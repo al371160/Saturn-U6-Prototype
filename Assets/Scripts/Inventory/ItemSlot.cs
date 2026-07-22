@@ -136,43 +136,60 @@ public class ItemSlot : MonoBehaviour, IPointerClickHandler, IPointerEnterHandle
         }
         else
         {
-            inventoryManager.DeselectAllSlots();
-
-            if (selectedShader != null)
-                selectedShader.SetActive(true);
-
-            thisItemSelected = true;
-
-            // Stop any ongoing title typing
-            isTypingTitle = false;
-
-            if (typingTitleCoroutine != null)
-            {
-                StopCoroutine(typingTitleCoroutine);
-            }
-
-            // Immediately clear both texts
-            itemDescriptionNameText.text = "";
-            itemDescriptionText.text = ""; // This will now instantly display the full description.
-
-            // Start new title typing coroutine
-            typingTitleCoroutine = StartCoroutine(TypeItemTitle(itemName));
-
-            // Instantly show description (no coroutine)
-            itemDescriptionText.text = itemDescription;
-
-            // Update image
-            itemDescriptionImage.sprite = itemSprite;
-
-            if (itemDescriptionImage.sprite == null)
-            {
-                itemDescriptionImage.sprite = emptySprite;
-            }
-
-            // Stay scaled when selected
-            targetScale = hoverScale;
-
+            SelectSlot();
         }
+    }
+
+    /// <summary>Marks this slot selected and refreshes the shared description panel. Split out of
+    /// OnLeftClick so callers that populate slots without a pointer click (e.g. SurvivorInventorySync
+    /// after a quiet batch sync) can still get the description panel to show something. Guards the
+    /// typing coroutine against an inactive hierarchy — the inventory panel starts closed, and
+    /// StartCoroutine throws on an inactive GameObject.</summary>
+    public void SelectSlot()
+    {
+        if (quantity <= 0)
+            return;
+
+        inventoryManager?.DeselectAllSlots();
+
+        if (selectedShader != null)
+            selectedShader.SetActive(true);
+
+        thisItemSelected = true;
+
+        // Stop any ongoing title typing
+        isTypingTitle = false;
+
+        if (typingTitleCoroutine != null)
+        {
+            StopCoroutine(typingTitleCoroutine);
+            typingTitleCoroutine = null;
+        }
+
+        // Instantly show description (no coroutine) — always non-empty.
+        itemDescriptionText.text = !string.IsNullOrEmpty(itemDescription) ? itemDescription : "No description available.";
+
+        // Update image
+        itemDescriptionImage.sprite = itemSprite;
+
+        if (itemDescriptionImage.sprite == null)
+        {
+            itemDescriptionImage.sprite = emptySprite;
+        }
+
+        if (gameObject.activeInHierarchy)
+        {
+            itemDescriptionNameText.text = "";
+            typingTitleCoroutine = StartCoroutine(TypeItemTitle(itemName));
+        }
+        else
+        {
+            // Panel is closed — no coroutine host available; show the full name immediately.
+            itemDescriptionNameText.text = itemName;
+        }
+
+        // Stay scaled when selected
+        targetScale = hoverScale;
     }
 
     private IEnumerator TypeItemTitle(string title)

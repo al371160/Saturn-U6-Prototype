@@ -76,7 +76,7 @@ public class Item : MonoBehaviour
         if (leftoverItems <= 0)
         {
             SetAlertChildrenActive(false);
-            DisableMeshRenderers();
+            DisableVisuals();
 
             if (itemData.pickupSound != null)
             {
@@ -91,12 +91,26 @@ public class Item : MonoBehaviour
         }
     }
 
-    private void DisableMeshRenderers()
+    /// <summary>Hides every visual on pickup — not just MeshRenderers — so trail/particle FX
+    /// and skinned/sprite renderers don't linger while the destroy-delay coroutine runs.</summary>
+    private void DisableVisuals()
     {
-        MeshRenderer[] meshRenderers = GetComponentsInChildren<MeshRenderer>();
-        foreach (MeshRenderer renderer in meshRenderers)
+        Renderer[] renderers = GetComponentsInChildren<Renderer>();
+        foreach (Renderer renderer in renderers)
         {
             renderer.enabled = false;
+        }
+
+        ParticleSystem[] particleSystems = GetComponentsInChildren<ParticleSystem>();
+        foreach (ParticleSystem particles in particleSystems)
+        {
+            particles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+
+        Collider[] colliders = GetComponentsInChildren<Collider>();
+        foreach (Collider collider in colliders)
+        {
+            collider.enabled = false;
         }
     }
 
