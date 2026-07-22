@@ -21,7 +21,6 @@ MonoBehaviour:
   statToChange: 0
   amountToChangeStat: 10
   suitMaxWeight: 10
-  suitMaxAltitude: 50
   suitMaxSpeed: 8
   requiredMinigame: 3
   survivorWeapon: {fileID: 11400000, guid: c69faf355a1cb4686b849a615b6472bb, type: 2}

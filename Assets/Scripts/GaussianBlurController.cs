@@ -13,19 +13,18 @@ public class GaussianBlurController : MonoBehaviour
 
     private void Start()
     {
-        if (postProcessingVolume.profile.TryGet(out dof))
-        {
-            dof.active = false; // Only pay for the DoF pass while the inventory is actually open
-            dof.focusDistance.value = 20f; // Start far (no blur)
-        }
-        else
-        {
-            Debug.LogWarning("DepthOfField not found on Volume.");
-        }
+        if (!EnsureDof())
+            return;
+
+        dof.active = false; // Only pay for the DoF pass while the inventory is actually open
+        dof.focusDistance.value = 20f; // Start far (no blur)
     }
 
     public void EnableBlur()
     {
+        if (!EnsureDof())
+            return;
+
         if (currentCoroutine != null) StopCoroutine(currentCoroutine);
         dof.active = true;
         currentCoroutine = StartCoroutine(LerpFocusDistance(dof.focusDistance.value, 0.1f, deactivateAfter: false));
@@ -33,8 +32,28 @@ public class GaussianBlurController : MonoBehaviour
 
     public void DisableBlur()
     {
+        if (!EnsureDof())
+            return;
+
         if (currentCoroutine != null) StopCoroutine(currentCoroutine);
         currentCoroutine = StartCoroutine(LerpFocusDistance(dof.focusDistance.value, 20f, deactivateAfter: true));
+    }
+
+    private bool EnsureDof()
+    {
+        if (dof != null)
+            return true;
+
+        if (postProcessingVolume == null || postProcessingVolume.profile == null)
+            return false;
+
+        if (!postProcessingVolume.profile.TryGet(out dof) || dof == null)
+        {
+            Debug.LogWarning("DepthOfField not found on Volume.", this);
+            return false;
+        }
+
+        return true;
     }
 
     private IEnumerator LerpFocusDistance(float start, float end, bool deactivateAfter)
@@ -43,13 +62,16 @@ public class GaussianBlurController : MonoBehaviour
 
         while (t < 1f)
         {
-            t += Time.unscaledDeltaTime * blurSpeed; // Changed here
-            dof.focusDistance.value = Mathf.Lerp(start, end, t);
+            t += Time.unscaledDeltaTime * blurSpeed;
+            if (dof != null)
+                dof.focusDistance.value = Mathf.Lerp(start, end, t);
             yield return null;
         }
 
-        dof.focusDistance.value = end;
-        if (deactivateAfter) dof.active = false;
+        if (dof != null)
+        {
+            dof.focusDistance.value = end;
+            if (deactivateAfter) dof.active = false;
+        }
     }
-
 }

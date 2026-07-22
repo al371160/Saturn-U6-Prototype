@@ -462,6 +462,7 @@ public class SurvivorBossEnemy : MonoBehaviour, ISurvivorDamageable, ISurvivorSt
 
     private void Die()
     {
+        SurvivorAudio.PlayDestroyForTarget(SurvivorHitAudioKind.Boss);
         controller?.RegisterBossDefeated(this, data != null ? data.bossXPReward : 0);
         Destroy(gameObject);
     }

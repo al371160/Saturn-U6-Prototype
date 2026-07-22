@@ -36,6 +36,7 @@ public class SurvivorChainWeapon : SurvivorWeaponBehavior
 
     private void CastChain(SurvivorWeaponStarStats stats)
     {
+        PlayFireSfx();
         float damageMultiplier = controller.WeaponManager != null ? controller.WeaponManager.DamageMultiplier : 1f;
         float rangeMultiplier = controller.WeaponManager != null ? controller.WeaponManager.RangeMultiplier : 1f;
         float jumpRadius = stats.range * rangeMultiplier;

@@ -66,7 +66,10 @@ public class SurvivorStormObjective : MonoBehaviour, ISurvivorDamageable
         UpdateCoreCrackVisual();
 
         if (coreHealth <= 0f)
+        {
             IsDestroyed = true;
+            SurvivorAudio.PlayDestroyForTarget(gameObject);
+        }
     }
 
     private void UpdateCoreCrackVisual()

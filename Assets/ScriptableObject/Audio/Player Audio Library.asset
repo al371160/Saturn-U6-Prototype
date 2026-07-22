@@ -1,0 +1,183 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af4901ab995e745d3853d35a418ea704, type: 3}
+  m_Name: Player Audio Library
+  m_EditorClassIdentifier: 
+  footstep: {fileID: 8300000, guid: 986962d5decab4dcbac3fe8be241905b, type: 3}
+  jump: {fileID: 8300000, guid: ddaf0815618244622bbffee566583ee7, type: 3}
+  land: {fileID: 8300000, guid: 950d6250af11c4c0dbf453080ab2ee2c, type: 3}
+  dash: {fileID: 0}
+  glideLoop: {fileID: 8300000, guid: b62830d037e1c464fbdaa8a78988d959, type: 3}
+  windLoop: {fileID: 8300000, guid: 4df9e851972db4f84b47a38dc93dc5a2, type: 3}
+  swimLoop: {fileID: 0}
+  inventoryOpen: {fileID: 8300000, guid: b4d18d855ac514b87a17820d94af49fe, type: 3}
+  inventoryClose: {fileID: 8300000, guid: 6f0948e25df784e8a9c2405fdd071ea9, type: 3}
+  uiSelect: {fileID: 8300000, guid: b4d18d855ac514b87a17820d94af49fe, type: 3}
+  uiHover: {fileID: 8300000, guid: 6f0948e25df784e8a9c2405fdd071ea9, type: 3}
+  pickupGeneric: {fileID: 8300000, guid: a586f41e2aaaf45ad8263b7dbdcc5604, type: 3}
+  pickupImportant: {fileID: 8300000, guid: 6b697407c5a69436886ebb6ecfbc2cbd, type: 3}
+  pickupWeapon: {fileID: 8300000, guid: 850af69c0e09f430c85f24835bcc6e81, type: 3}
+  hitImpact: {fileID: 8300000, guid: 6bef1f9caaaa24e3db1d65b618834a8c, type: 3}
+  crateShatter: {fileID: 8300000, guid: 06067218d5e564eb4a2c21b1948aa2b4, type: 3}
+  levelUp: {fileID: 8300000, guid: 454c8b7b6c6a646ceb885b68e71b67bd, type: 3}
+  playerHurt: {fileID: 8300000, guid: fdb041334c418438ba59557cb93964f7, type: 3}
+  playerDeath: {fileID: 0}
+  enemyHit:
+    impact: {fileID: 8300000, guid: 6bef1f9caaaa24e3db1d65b618834a8c, type: 3}
+    react: {fileID: 8300000, guid: 1421823bdd4d24448978a5e4c4488f23, type: 3}
+    destroy: {fileID: 8300000, guid: 25a0e58c7081d41dda4e7bc237a61628, type: 3}
+    impactVolume: 0.55
+    reactVolume: 0.6
+    destroyVolume: 0.75
+  eliteHit:
+    impact: {fileID: 8300000, guid: 6bef1f9caaaa24e3db1d65b618834a8c, type: 3}
+    react: {fileID: 8300000, guid: b90482026550246b78525c09f0ea76bc, type: 3}
+    destroy: {fileID: 8300000, guid: 25a0e58c7081d41dda4e7bc237a61628, type: 3}
+    impactVolume: 0.6
+    reactVolume: 0.65
+    destroyVolume: 0.8
+  bossHit:
+    impact: {fileID: 8300000, guid: 6bef1f9caaaa24e3db1d65b618834a8c, type: 3}
+    react: {fileID: 8300000, guid: b8f713835064e4d03bcdd34a026433e3, type: 3}
+    destroy: {fileID: 8300000, guid: 16c9653bc51744c878fb90db35d255bc, type: 3}
+    impactVolume: 0.65
+    reactVolume: 0.8
+    destroyVolume: 0.9
+  crateHit:
+    impact: {fileID: 8300000, guid: 950d6250af11c4c0dbf453080ab2ee2c, type: 3}
+    react: {fileID: 8300000, guid: bb3b9f066fe684e20acfa5bf07411f97, type: 3}
+    destroy: {fileID: 8300000, guid: 06067218d5e564eb4a2c21b1948aa2b4, type: 3}
+    impactVolume: 0.55
+    reactVolume: 0.35
+    destroyVolume: 0.85
+  environmentHit:
+    impact: {fileID: 8300000, guid: bb3b9f066fe684e20acfa5bf07411f97, type: 3}
+    react: {fileID: 8300000, guid: 950d6250af11c4c0dbf453080ab2ee2c, type: 3}
+    destroy: {fileID: 8300000, guid: 16c9653bc51744c878fb90db35d255bc, type: 3}
+    impactVolume: 0.5
+    reactVolume: 0.35
+    destroyVolume: 0.85
+  ambientCombatLoop: {fileID: 8300000, guid: 78dcba2015c364f179da6d4f446dd96c, type: 3}
+  ambientCombatVolume: 0.16
+  ambientBedLoop: {fileID: 8300000, guid: f3b468b39edf74dcdb6afd60b9cd0cf8, type: 3}
+  ambientBedVolume: 0.14
+  weaponThemes:
+  - themeName: Ice / Frost
+    keywords:
+    - frost
+    - cryo
+    - ice
+    - freeze
+    fire: {fileID: 8300000, guid: 3b37d43e08c304c48b582180d891b526, type: 3}
+    accent: {fileID: 8300000, guid: 9f2d5f6bb2c2c4e8f897fd090632d0cc, type: 3}
+    fireVolume: 0.55
+    accentVolume: 0.25
+  - themeName: Fire / Ember
+    keywords:
+    - ember
+    - blazing
+    - fire
+    - frag
+    - flame
+    fire: {fileID: 8300000, guid: 16c9653bc51744c878fb90db35d255bc, type: 3}
+    accent: {fileID: 8300000, guid: 91ea687e356ee496bb490f6ad059ec31, type: 3}
+    fireVolume: 0.55
+    accentVolume: 0.3
+  - themeName: Poison / Venom
+    keywords:
+    - venom
+    - plague
+    - toxic
+    - caustic
+    - poison
+    fire: {fileID: 8300000, guid: c9514599327374b73a47addd6402edf0, type: 3}
+    accent: {fileID: 8300000, guid: 71fc07a7c63684c1d9d91fc35b83f707, type: 3}
+    fireVolume: 0.5
+    accentVolume: 0.25
+  - themeName: Lightning / Storm
+    keywords:
+    - thunder
+    - storm
+    - static
+    - void
+    - lightning
+    - bolt
+    fire: {fileID: 8300000, guid: b2542302946e94f9eb281bba89aa46b7, type: 3}
+    accent: {fileID: 8300000, guid: 9734a5642d65446c0bb1d37d80d41e6c, type: 3}
+    fireVolume: 0.6
+    accentVolume: 0.28
+  - themeName: Metal / Kunai
+    keywords:
+    - kunai
+    - iron
+    - scrap
+    - rail
+    - cannon
+    - ricochet
+    - metal
+    fire: {fileID: 8300000, guid: 89154ccd9a623425884e89cbbba37324, type: 3}
+    accent: {fileID: 8300000, guid: bb3b9f066fe684e20acfa5bf07411f97, type: 3}
+    fireVolume: 0.62
+    accentVolume: 0.28
+  - themeName: Hammer / Heavy
+    keywords:
+    - hammer
+    - maul
+    fire: {fileID: 8300000, guid: 06067218d5e564eb4a2c21b1948aa2b4, type: 3}
+    accent: {fileID: 8300000, guid: c53068f770dc04137a3e2e7944bb0c85, type: 3}
+    fireVolume: 0.7
+    accentVolume: 0.28
+  - themeName: Blade / Spear
+    keywords:
+    - saber
+    - blade
+    - spear
+    - ink
+    - thorn
+    - poet
+    fire: {fileID: 8300000, guid: c53068f770dc04137a3e2e7944bb0c85, type: 3}
+    accent: {fileID: 8300000, guid: 6bef1f9caaaa24e3db1d65b618834a8c, type: 3}
+    fireVolume: 0.65
+    accentVolume: 0.3
+  - themeName: Gun / Hitscan
+    keywords:
+    - shotgun
+    - scatter
+    - seeker
+    - missile
+    - turret
+    - twin
+    fire: {fileID: 8300000, guid: 0d4e8fae4671c4c8ea9fdef23c9f5977, type: 3}
+    accent: {fileID: 8300000, guid: bb3b9f066fe684e20acfa5bf07411f97, type: 3}
+    fireVolume: 0.6
+    accentVolume: 0.2
+  - themeName: Bomb / Explosive
+    keywords:
+    - bomb
+    - grenade
+    - explosive
+    fire: {fileID: 8300000, guid: 16c9653bc51744c878fb90db35d255bc, type: 3}
+    accent: {fileID: 8300000, guid: 06067218d5e564eb4a2c21b1948aa2b4, type: 3}
+    fireVolume: 0.7
+    accentVolume: 0.25
+  fireProjectile: {fileID: 8300000, guid: 0d4e8fae4671c4c8ea9fdef23c9f5977, type: 3}
+  fireHitscan: {fileID: 8300000, guid: c192dc54d04a041eebebb69020bda58c, type: 3}
+  fireMelee: {fileID: 8300000, guid: c53068f770dc04137a3e2e7944bb0c85, type: 3}
+  fireOrbit: {fileID: 8300000, guid: c53068f770dc04137a3e2e7944bb0c85, type: 3}
+  fireAura: {fileID: 8300000, guid: b2542302946e94f9eb281bba89aa46b7, type: 3}
+  fireBoomerang: {fileID: 8300000, guid: 71fc07a7c63684c1d9d91fc35b83f707, type: 3}
+  fireChain: {fileID: 8300000, guid: 9734a5642d65446c0bb1d37d80d41e6c, type: 3}
+  fireBouncing: {fileID: 8300000, guid: 0d4e8fae4671c4c8ea9fdef23c9f5977, type: 3}
+  firePoisonPool: {fileID: 8300000, guid: c9514599327374b73a47addd6402edf0, type: 3}
+  fireExplosive: {fileID: 8300000, guid: 16c9653bc51744c878fb90db35d255bc, type: 3}
+  fireHoming: {fileID: 8300000, guid: c192dc54d04a041eebebb69020bda58c, type: 3}
+  fireDrone: {fileID: 8300000, guid: b2542302946e94f9eb281bba89aa46b7, type: 3}

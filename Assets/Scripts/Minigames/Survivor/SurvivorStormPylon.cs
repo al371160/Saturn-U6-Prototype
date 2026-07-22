@@ -19,6 +19,7 @@ public class SurvivorStormPylon : MonoBehaviour, ISurvivorDamageable
         health -= amount;
         if (health <= 0f)
         {
+            SurvivorAudio.PlayDestroyForTarget(gameObject);
             onDestroyed?.Invoke();
             Destroy(gameObject);
         }

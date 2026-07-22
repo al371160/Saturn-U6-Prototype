@@ -68,7 +68,7 @@ public class SurvivorOrbitWeapon : SurvivorWeaponBehavior
 
     private void Update()
     {
-        if (controller == null || !controller.IsRunning || controller.IsPaused)
+        if (controller == null || !controller.IsRunning || controller.IsPaused || !CanFire())
             return;
 
         if (orbitNodes == null || orbitNodes.Length == 0)
@@ -96,7 +96,7 @@ public class SurvivorOrbitWeapon : SurvivorWeaponBehavior
         int hitCount = Physics.OverlapSphereNonAlloc(worldPoint, data.hitRadius, overlapBuffer);
         for (int i = 0; i < hitCount; i++)
         {
-            ISurvivorDamageable target = overlapBuffer[i].GetComponent<ISurvivorDamageable>();
+            ISurvivorDamageable target = overlapBuffer[i].GetComponentInParent<ISurvivorDamageable>();
             if (target == null)
                 continue;
 
@@ -110,13 +110,14 @@ public class SurvivorOrbitWeapon : SurvivorWeaponBehavior
 
     public void DealDamage(GameObject targetObject, Vector3 sourcePoint)
     {
-        if (targetObject == null || controller == null || !controller.IsRunning)
+        if (targetObject == null || controller == null || !controller.IsRunning || !CanFire())
             return;
 
         float damageMultiplier = controller.WeaponManager != null ? controller.WeaponManager.DamageMultiplier : 1f;
         Vector3 direction = targetObject.transform.position - sourcePoint;
         direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : transform.forward;
 
+        PlayFireSfx();
         SurvivorCombatFX.ApplyHit(targetObject, damage * damageMultiplier, data.element, direction, data.knockbackForce);
     }
 
@@ -151,7 +152,10 @@ public class SurvivorOrbitHitbox : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.GetComponent<ISurvivorDamageable>() != null)
+        if (weapon == null || !weapon.AllowsFiring)
+            return;
+
+        if (other.GetComponentInParent<ISurvivorDamageable>() != null)
             weapon.DealDamage(other.gameObject, transform.position);
     }
 }

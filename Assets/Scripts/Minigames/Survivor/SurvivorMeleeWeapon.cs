@@ -36,6 +36,7 @@ public class SurvivorMeleeWeapon : SurvivorWeaponBehavior
 
     private void Swing(SurvivorWeaponStarStats stats)
     {
+        PlayFireSfx();
         float damageMultiplier = controller.WeaponManager != null ? controller.WeaponManager.DamageMultiplier : 1f;
         float rangeMultiplier = controller.WeaponManager != null ? controller.WeaponManager.RangeMultiplier : 1f;
         float damage = stats.damage * damageMultiplier;

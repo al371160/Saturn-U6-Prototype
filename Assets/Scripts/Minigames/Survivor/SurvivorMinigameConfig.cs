@@ -67,6 +67,13 @@ public class SurvivorMinigameConfig : ScriptableObject
     public LayerMask groundMask;
     public float groundSnapRayHeight = 50f;
 
+    [Header("Forest")]
+    [Tooltip("Tree prefabs scattered across the map at combat start (Tree1/Tree2/round/flat variants).")]
+    public GameObject[] forestTreePrefabs;
+    public int forestTreeCount = 100;
+    public float forestMapHalfExtent = 220f;
+    public float forestMinSpacing = 7f;
+
     [Header("Battle Bus (Multiplayer round entry)")]
     [Tooltip("Off by default so single-player/Campaign testing is unaffected. Enable for the Multiplayer round-entry flow.")]
     public bool useBattleBusIntro = false;

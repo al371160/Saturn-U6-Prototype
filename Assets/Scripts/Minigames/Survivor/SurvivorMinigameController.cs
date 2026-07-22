@@ -56,6 +56,13 @@ public class SurvivorMinigameController : MonoBehaviour
         SetMenuMouseUnlocked(true);
 
         inventorySync?.ClearSynced();
+        SurvivorAudio.StopCombatAmbience();
+
+        if (forestRoot != null)
+        {
+            Destroy(forestRoot.gameObject);
+            forestRoot = null;
+        }
 
         if (statusText != null)
             statusText.text = $"{result.outcome}: {result.reason}";
@@ -190,6 +197,8 @@ public class SurvivorMinigameController : MonoBehaviour
             ShowInitialWeaponChoice();
     }
 
+    private bool worldPropsSpawned;
+
     private IEnumerator BattleBusIntroRoutine()
     {
         GameObject busObject = new GameObject("SurvivorBattleBus");
@@ -202,10 +211,10 @@ public class SurvivorMinigameController : MonoBehaviour
         bool jumped = false;
         bus.Launch(worldPlayer.transform, () => jumped = true);
 
-        // Pick a starting weapon while riding, before the jump — the freeze this triggers also
-        // pauses the bus's own flight (Time.deltaTime-driven), resuming once a choice is made.
+        // Populate the map as soon as the player boards the bus (visible during flight/skydive).
         EnsurePlayerSystemsReady();
-        HandleWeaponChoiceIfNeeded();
+        SpawnWorldPropsIfNeeded();
+        ApplySessionOrDefaultLoadout();
 
         yield return new WaitUntil(() => jumped);
         yield return new WaitUntil(() => !worldPlayer.isSkydiving && worldPlayer.isGrounded);
@@ -223,15 +232,156 @@ public class SurvivorMinigameController : MonoBehaviour
         EnsurePlayerSystemsReady();
 
         spawner.Initialize(this, config, minigamePlayer.transform, enemyRoot, enemyTemplate);
-        SpawnLootCrates();
+        SpawnWorldPropsIfNeeded();
 
         IsRunning = true;
+        SurvivorAudio.StartCombatAmbience();
         RefreshHud();
 
-        HandleWeaponChoiceIfNeeded();
+        ApplySessionOrDefaultLoadout();
     }
 
-    /// <summary>Spawns breakable loot crates at random picks from fixed map anchors (not player-relative).
+    /// <summary>Trees / crates / ground weapons — once per run. Called on bus board (or BeginCombat if no bus).</summary>
+    private void SpawnWorldPropsIfNeeded()
+    {
+        if (worldPropsSpawned)
+            return;
+        worldPropsSpawned = true;
+
+        SpawnForestTrees();
+        SpawnLootCrates();
+        SpawnGroundWeapons();
+    }
+
+    /// <summary>Uses MatchSessionState loadout from the menu when present; otherwise config defaults.
+    /// Never opens the bus/start weapon-choice modal.</summary>
+    private void ApplySessionOrDefaultLoadout()
+    {
+        if (weaponChoiceHandled)
+            return;
+        weaponChoiceHandled = true;
+
+        MatchSessionState session = MatchSessionState.Instance;
+        if (session != null && session.HasLoadout)
+        {
+            if (session.SelectedWeapon != null)
+                weaponManager.EquipOrUpgrade(session.SelectedWeapon);
+
+            for (int i = 0; i < session.SelectedBuffs.Count; i++)
+            {
+                SurvivorBuffDataSO buff = session.SelectedBuffs[i];
+                if (buff == null)
+                    continue;
+                buff.Apply(this);
+                RecordBuffAcquired(buff);
+            }
+
+            return;
+        }
+
+        if (config.startingWeapons != null && config.startingWeapons.Length > 0)
+        {
+            EquipStartingWeapons();
+            return;
+        }
+
+        // Editor / direct Level 1 play: auto-equip first starting choice or available weapon.
+        SurvivorWeaponDataSO[] pool = config.startingWeaponChoices != null && config.startingWeaponChoices.Length > 0
+            ? config.startingWeaponChoices
+            : config.availableWeapons;
+        if (pool != null)
+        {
+            for (int i = 0; i < pool.Length; i++)
+            {
+                if (pool[i] == null)
+                    continue;
+                weaponManager.EquipOrUpgrade(pool[i]);
+                break;
+            }
+        }
+    }
+
+    private Transform forestRoot;
+
+    /// <summary>Scatter forest tree prefabs across the combat pad.</summary>
+    private void SpawnForestTrees()
+    {
+        if (config == null || config.forestTreePrefabs == null || config.forestTreePrefabs.Length == 0)
+            return;
+
+        if (forestRoot != null)
+            Destroy(forestRoot.gameObject);
+
+        forestRoot = new GameObject("SurvivorTrees").transform;
+        int targetCount = Mathf.Max(0, config.forestTreeCount);
+        float half = config.forestMapHalfExtent;
+        float minSpacing = Mathf.Max(1f, config.forestMinSpacing);
+        float minSpacingSqr = minSpacing * minSpacing;
+
+        List<Vector3> placed = new List<Vector3>(targetCount);
+        int attempts = 0;
+        int maxAttempts = targetCount * 20;
+
+        while (placed.Count < targetCount && attempts < maxAttempts)
+        {
+            attempts++;
+            Vector3 candidate = new Vector3(
+                Random.Range(-half, half),
+                0f,
+                Random.Range(-half, half));
+
+            bool tooClose = false;
+            for (int i = 0; i < placed.Count; i++)
+            {
+                if ((placed[i] - candidate).sqrMagnitude < minSpacingSqr)
+                {
+                    tooClose = true;
+                    break;
+                }
+            }
+
+            if (tooClose)
+                continue;
+
+            if (Physics.CheckSphere(candidate + Vector3.up, 2.5f, ~0, QueryTriggerInteraction.Ignore))
+            {
+                // Allow ground hits; reject if a non-trigger collider sits near the point above ground.
+                Collider[] hits = Physics.OverlapSphere(candidate + Vector3.up * 1.2f, 1.8f, ~0, QueryTriggerInteraction.Ignore);
+                bool blocked = false;
+                for (int h = 0; h < hits.Length; h++)
+                {
+                    if (hits[h] == null)
+                        continue;
+                    // Skip large ground/terrain meshes by requiring a reasonably tall local bounds.
+                    if (hits[h] is TerrainCollider)
+                        continue;
+                    Bounds b = hits[h].bounds;
+                    if (b.size.y > 1.2f && b.extents.x + b.extents.z > 2f)
+                    {
+                        blocked = true;
+                        break;
+                    }
+                }
+
+                if (blocked)
+                    continue;
+            }
+
+            GameObject prefab = config.forestTreePrefabs[Random.Range(0, config.forestTreePrefabs.Length)];
+            if (prefab == null)
+                continue;
+
+            Vector3 spawnPosition = SurvivorGroundUtility.SnapToGround(
+                candidate, config.groundMask, config.groundSnapRayHeight, 0f);
+
+            GameObject tree = Instantiate(prefab, spawnPosition, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f), forestRoot);
+            float scale = Random.Range(0.85f, 1.2f);
+            tree.transform.localScale = prefab.transform.localScale * scale;
+            placed.Add(spawnPosition);
+        }
+    }
+
+    /// <summary>Spawns breakable loot crates at random picks from map anchors (not player-relative).
     /// Crates drop weapons or buffs when shattered.</summary>
     private void SpawnLootCrates()
     {
@@ -250,14 +400,70 @@ public class SurvivorMinigameController : MonoBehaviour
         if ((weapons == null || weapons.Length == 0) && buffs.Length == 0)
             return;
 
-        Vector3[] candidateAreas = GetPredeterminedCrateAreas();
-        if (candidateAreas.Length == 0)
+        Vector3[] shuffled = ShuffleAreas(GetPredeterminedCrateAreas());
+        const int structureCount = 28;
+        int spawnCount = Mathf.Min(structureCount, shuffled.Length);
+
+        Transform pickupTarget = worldPlayer != null ? worldPlayer.transform : minigamePlayer != null ? minigamePlayer.transform : null;
+        float halfHeight = SurvivorLootCrate.CrateWorldSize * 0.5f;
+
+        for (int i = 0; i < spawnCount; i++)
+        {
+            Vector3 area = shuffled[i];
+            Vector2 jitter = Random.insideUnitCircle * 6f;
+            Vector3 spawnPosition = area + new Vector3(jitter.x, 0f, jitter.y);
+            spawnPosition = SurvivorGroundUtility.SnapToGround(spawnPosition, config.groundMask, config.groundSnapRayHeight, halfHeight);
+
+            GameObject structureObject = new GameObject("SurvivorLootCrate");
+            structureObject.transform.position = spawnPosition;
+
+            BoxCollider structureCollider = structureObject.AddComponent<BoxCollider>();
+            structureCollider.size = Vector3.one * SurvivorLootCrate.CrateWorldSize;
+
+            SurvivorLootCrate crate = structureObject.AddComponent<SurvivorLootCrate>();
+            crate.Initialize(this, pickupTarget, weapons, buffs, 50f, 0.65f);
+        }
+    }
+
+    /// <summary>Raw weapon pickups on the ground (no crate) at a different random subset of map anchors.</summary>
+    private void SpawnGroundWeapons()
+    {
+        SurvivorWeaponDataSO[] weapons = config.availableWeapons;
+        if (weapons == null || weapons.Length == 0)
             return;
 
-        const int structureCount = 14;
-        int spawnCount = Mathf.Min(structureCount, candidateAreas.Length);
+        Vector3[] shuffled = ShuffleAreas(GetPredeterminedCrateAreas());
+        const int groundCount = 10;
+        int spawnCount = Mathf.Min(groundCount, shuffled.Length);
 
-        Vector3[] shuffled = (Vector3[])candidateAreas.Clone();
+        Transform pickupTarget = worldPlayer != null ? worldPlayer.transform : minigamePlayer != null ? minigamePlayer.transform : null;
+
+        for (int i = 0; i < spawnCount; i++)
+        {
+            SurvivorWeaponDataSO weapon = SurvivorLootRarity.PickWeightedWeapon(weapons);
+            if (weapon == null)
+                continue;
+
+            int startStar = SurvivorLootRarity.RollStartStar(weapon);
+
+            // Offset from crate cluster so they don't stack on the same points.
+            Vector3 area = shuffled[i];
+            Vector2 jitter = Random.insideUnitCircle * 10f + new Vector2(8f, -6f);
+            Vector3 spawnPosition = area + new Vector3(jitter.x, 0f, jitter.y);
+            spawnPosition = SurvivorGroundUtility.SnapToGround(spawnPosition, config.groundMask, config.groundSnapRayHeight, 0.45f);
+
+            GameObject pickupObject = new GameObject("SurvivorWeaponPickup");
+            pickupObject.transform.position = spawnPosition;
+            SphereCollider col = pickupObject.AddComponent<SphereCollider>();
+            col.isTrigger = true;
+            col.radius = 0.45f;
+            pickupObject.AddComponent<SurvivorWeaponPickup>().Initialize(this, pickupTarget, weapon, startStar);
+        }
+    }
+
+    private static Vector3[] ShuffleAreas(Vector3[] source)
+    {
+        Vector3[] shuffled = (Vector3[])source.Clone();
         for (int i = shuffled.Length - 1; i > 0; i--)
         {
             int j = Random.Range(0, i + 1);
@@ -266,55 +472,23 @@ public class SurvivorMinigameController : MonoBehaviour
             shuffled[j] = tmp;
         }
 
-        Transform pickupTarget = worldPlayer != null ? worldPlayer.transform : minigamePlayer != null ? minigamePlayer.transform : null;
-
-        for (int i = 0; i < spawnCount; i++)
-        {
-            Vector3 area = shuffled[i];
-            Vector2 jitter = Random.insideUnitCircle * 6f;
-            Vector3 spawnPosition = area + new Vector3(jitter.x, 0f, jitter.y);
-            spawnPosition = SurvivorGroundUtility.SnapToGround(spawnPosition, config.groundMask, config.groundSnapRayHeight, 0.8f);
-
-            GameObject structureObject = new GameObject("SurvivorLootCrate");
-            structureObject.transform.position = spawnPosition;
-
-            BoxCollider structureCollider = structureObject.AddComponent<BoxCollider>();
-            structureCollider.size = Vector3.one;
-
-            SurvivorLootCrate crate = structureObject.AddComponent<SurvivorLootCrate>();
-            crate.Initialize(this, pickupTarget, weapons, buffs, 50f, 0.65f);
-        }
+        return shuffled;
     }
 
-    /// <summary>Fixed world anchors spread across the Level 1 terrain (±240 padded). Each run
+    /// <summary>Dense grid of world anchors across the Level 1 terrain (±200). Each run
     /// randomly activates a subset — positions themselves do not depend on the player.</summary>
     private static Vector3[] GetPredeterminedCrateAreas()
     {
-        return new Vector3[]
+        List<Vector3> areas = new List<Vector3>(64);
+        const float half = 200f;
+        const float step = 60f;
+        for (float x = -half; x <= half + 0.01f; x += step)
         {
-            new Vector3(0f, 0f, 0f),
-            new Vector3(-140f, 0f, -100f),
-            new Vector3(150f, 0f, -140f),
-            new Vector3(-180f, 0f, 160f),
-            new Vector3(-80f, 0f, 180f),
-            new Vector3(60f, 0f, 170f),
-            new Vector3(180f, 0f, 80f),
-            new Vector3(-60f, 0f, 80f),
-            new Vector3(120f, 0f, 120f),
-            new Vector3(-200f, 0f, 40f),
-            new Vector3(-40f, 0f, -40f),
-            new Vector3(40f, 0f, -60f),
-            new Vector3(100f, 0f, 20f),
-            new Vector3(-100f, 0f, 120f),
-            new Vector3(200f, 0f, -80f),
-            new Vector3(-160f, 0f, -40f),
-            new Vector3(20f, 0f, 200f),
-            new Vector3(-20f, 0f, 40f),
-            new Vector3(-120f, 0f, -180f),
-            new Vector3(80f, 0f, -180f),
-            new Vector3(-180f, 0f, -160f),
-            new Vector3(160f, 0f, 40f),
-        };
+            for (float z = -half; z <= half + 0.01f; z += step)
+                areas.Add(new Vector3(x, 0f, z));
+        }
+
+        return areas.ToArray();
     }
 
     private void ShowInitialWeaponChoice()

@@ -29,25 +29,39 @@ public class SurvivorPoisonPoolWeapon : SurvivorWeaponBehavior
             return;
 
         fireTimer = Mathf.Max(0.3f, rateMultiplier > 0f ? stats.rate / rateMultiplier : stats.rate);
+        PlayFireSfx();
         Fire(stats);
     }
 
     private void Fire(SurvivorWeaponStarStats stats)
     {
         Transform target = FindNearestTarget();
-        Vector3 direction = target != null ? (target.position - transform.position) : transform.forward;
-        direction.y = 0f;
-        if (direction.sqrMagnitude < 0.01f)
-            direction = transform.forward;
-        direction.Normalize();
+        Vector3 direction = ResolveFlatAimDirection(target);
 
         float rangeMultiplier = controller.WeaponManager != null ? controller.WeaponManager.RangeMultiplier : 1f;
         float damageMultiplier = controller.WeaponManager != null ? controller.WeaponManager.DamageMultiplier : 1f;
-        float travelDistance = target != null ? Vector3.Distance(transform.position, target.position) : 8f;
+
+        float travelDistance;
+        if (HasCursorAim(out _) && TryGetCursorWorldPoint(out Vector3 cursorPoint))
+        {
+            Vector3 flat = cursorPoint - transform.position;
+            flat.y = 0f;
+            travelDistance = flat.magnitude;
+        }
+        else if (target != null)
+        {
+            travelDistance = Vector3.Distance(transform.position, target.position);
+        }
+        else
+        {
+            travelDistance = Mathf.Max(6f, stats.range * 0.65f);
+        }
+
+        travelDistance = Mathf.Clamp(travelDistance, 3f, Mathf.Max(8f, stats.range * rangeMultiplier));
 
         GameObject projectileObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         projectileObject.name = "SurvivorPoisonFlask";
-        projectileObject.transform.position = transform.position + Vector3.up * 0.6f;
+        projectileObject.transform.position = GetProjectileSpawnPosition();
         projectileObject.transform.localScale = Vector3.one * data.hitRadius * 1.4f;
 
         Collider col = projectileObject.GetComponent<Collider>();
@@ -62,8 +76,15 @@ public class SurvivorPoisonPoolWeapon : SurvivorWeaponBehavior
         if (renderer != null)
             renderer.material.color = data.weaponColor;
 
+        float poolRadius = Mathf.Max(1.6f, stats.range * rangeMultiplier * 0.35f);
+        float poolDuration = Mathf.Max(2.5f, stats.secondaryValue);
         projectileObject.AddComponent<SurvivorPoisonFlask>().Launch(
-            direction, 10f, travelDistance, stats.damage * damageMultiplier, stats.range * rangeMultiplier, Mathf.Max(1f, stats.secondaryValue));
+            direction,
+            10f,
+            travelDistance,
+            stats.damage * damageMultiplier,
+            poolRadius,
+            poolDuration);
     }
 
     private Transform FindNearestTarget()
@@ -98,7 +119,7 @@ public class SurvivorPoisonPoolWeapon : SurvivorWeaponBehavior
     }
 }
 
-/// <summary>Flies to its landing point, then leaves a lingering poison pool behind.</summary>
+/// <summary>Flies to its landing point, then leaves a lingering poison pool on the ground.</summary>
 public class SurvivorPoisonFlask : MonoBehaviour
 {
     private Vector3 direction;
@@ -108,6 +129,7 @@ public class SurvivorPoisonFlask : MonoBehaviour
     private float damage;
     private float poolRadius;
     private float poolDuration;
+    private bool landed;
 
     public void Launch(Vector3 travelDirection, float travelSpeed, float distance, float hitDamage, float radius, float duration)
     {
@@ -121,9 +143,19 @@ public class SurvivorPoisonFlask : MonoBehaviour
 
     private void Update()
     {
+        if (landed)
+            return;
+
         float step = speed * Time.deltaTime;
         transform.position += direction * step;
         traveled += step;
+
+        if (SurvivorWeaponBehavior.TryGetDamageableHit(transform.position, Mathf.Max(0.2f, transform.localScale.x * 0.5f), out Collider hit)
+            && hit.GetComponentInParent<SurvivorMinigamePlayer>() == null)
+        {
+            Land();
+            return;
+        }
 
         if (traveled >= travelDistance)
             Land();
@@ -131,17 +163,29 @@ public class SurvivorPoisonFlask : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.GetComponent<ISurvivorDamageable>() != null)
+        if (landed)
+            return;
+
+        // Only early-land on solid damageables / ground-ish colliders — not the shooter.
+        if (other.GetComponentInParent<SurvivorMinigamePlayer>() != null)
+            return;
+
+        if (other.GetComponentInParent<ISurvivorDamageable>() != null)
             Land();
     }
 
     private void Land()
     {
-        GameObject poolObject = new GameObject("SurvivorPoisonPool");
+        if (landed)
+            return;
+        landed = true;
+
         SurvivorMinigameController owner = Object.FindFirstObjectByType<SurvivorMinigameController>();
         LayerMask groundMask = owner != null && owner.config != null ? owner.config.groundMask : ~0;
         float rayHeight = owner != null && owner.config != null ? owner.config.groundSnapRayHeight : 50f;
-        Vector3 grounded = SurvivorGroundUtility.SnapToGround(transform.position, groundMask, rayHeight, 0.02f);
+        Vector3 grounded = SurvivorGroundUtility.SnapToGround(transform.position, groundMask, rayHeight, 0.05f);
+
+        GameObject poolObject = new GameObject("SurvivorPoisonPool");
         poolObject.transform.position = grounded;
         poolObject.AddComponent<SurvivorPoisonPoolZone>().Initialize(damage, poolRadius, poolDuration, groundMask, rayHeight);
         Destroy(gameObject);
@@ -154,7 +198,7 @@ public class SurvivorPoisonPoolZone : MonoBehaviour
     private float radius;
     private float remainingDuration;
     private float tickTimer;
-    private const float TickInterval = 0.5f;
+    private const float TickInterval = 0.45f;
     private GameObject visual;
     private ParticleSystem particles;
     private LayerMask groundMask;
@@ -163,18 +207,19 @@ public class SurvivorPoisonPoolZone : MonoBehaviour
 
     public void Initialize(float damagePerTick, float poolRadius, float duration, LayerMask groundLayerMask, float rayHeight)
     {
-        tickDamage = damagePerTick * 0.4f;
-        radius = poolRadius;
-        remainingDuration = duration;
-        tickTimer = TickInterval;
+        tickDamage = Mathf.Max(1f, damagePerTick * 0.45f);
+        radius = Mathf.Max(1.4f, poolRadius);
+        remainingDuration = Mathf.Max(2f, duration);
+        tickTimer = 0.15f;
         groundMask = groundLayerMask;
         groundRayHeight = rayHeight;
-        groundSnapTimer = 0.4f;
+        groundSnapTimer = 0.35f;
 
         visual = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         visual.name = "PoisonPoolVisual";
         visual.transform.SetParent(transform, false);
-        visual.transform.localScale = new Vector3(radius * 2f, 0.04f, radius * 2f);
+        visual.transform.localPosition = Vector3.up * 0.03f;
+        visual.transform.localScale = new Vector3(radius * 2f, 0.08f, radius * 2f);
 
         Collider visualCollider = visual.GetComponent<Collider>();
         if (visualCollider != null)
@@ -182,7 +227,7 @@ public class SurvivorPoisonPoolZone : MonoBehaviour
 
         Renderer renderer = visual.GetComponent<Renderer>();
         if (renderer != null)
-            renderer.material = SurvivorTransparentMaterial.Create(new Color(0.35f, 0.9f, 0.25f), 0.45f);
+            renderer.material = SurvivorTransparentMaterial.Create(new Color(0.3f, 0.95f, 0.2f), 0.55f);
 
         BuildParticles();
     }
@@ -195,20 +240,20 @@ public class SurvivorPoisonPoolZone : MonoBehaviour
 
         var main = particles.main;
         main.loop = true;
-        main.startLifetime = new ParticleSystem.MinMaxCurve(0.6f, 1.2f);
-        main.startSpeed = new ParticleSystem.MinMaxCurve(0.4f, 1.1f);
-        main.startSize = new ParticleSystem.MinMaxCurve(0.08f, 0.2f);
-        main.startColor = new Color(0.45f, 1f, 0.35f, 0.75f);
-        main.gravityModifier = -0.05f;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(0.7f, 1.4f);
+        main.startSpeed = new ParticleSystem.MinMaxCurve(0.35f, 1f);
+        main.startSize = new ParticleSystem.MinMaxCurve(0.1f, 0.28f);
+        main.startColor = new Color(0.45f, 1f, 0.3f, 0.8f);
+        main.gravityModifier = -0.08f;
         main.simulationSpace = ParticleSystemSimulationSpace.World;
 
         var emission = particles.emission;
-        emission.rateOverTime = Mathf.Clamp(radius * 4f, 8f, 28f);
+        emission.rateOverTime = Mathf.Clamp(radius * 5f, 12f, 36f);
 
         var shape = particles.shape;
         shape.enabled = true;
         shape.shapeType = ParticleSystemShapeType.Circle;
-        shape.radius = Mathf.Max(0.2f, radius * 0.85f);
+        shape.radius = Mathf.Max(0.35f, radius * 0.9f);
         shape.radiusThickness = 1f;
 
         var color = particles.colorOverLifetime;
@@ -217,10 +262,10 @@ public class SurvivorPoisonPoolZone : MonoBehaviour
         g.SetKeys(
             new[]
             {
-                new GradientColorKey(new Color(0.5f, 1f, 0.4f), 0f),
-                new GradientColorKey(new Color(0.2f, 0.7f, 0.15f), 1f)
+                new GradientColorKey(new Color(0.55f, 1f, 0.35f), 0f),
+                new GradientColorKey(new Color(0.15f, 0.65f, 0.12f), 1f)
             },
-            new[] { new GradientAlphaKey(0.7f, 0f), new GradientAlphaKey(0f, 1f) });
+            new[] { new GradientAlphaKey(0.85f, 0f), new GradientAlphaKey(0f, 1f) });
         color.color = g;
 
         particles.Play();
@@ -241,7 +286,7 @@ public class SurvivorPoisonPoolZone : MonoBehaviour
         if (groundSnapTimer <= 0f)
         {
             groundSnapTimer = 0.5f;
-            transform.position = SurvivorGroundUtility.SnapToGround(transform.position, groundMask, groundRayHeight, 0.02f);
+            transform.position = SurvivorGroundUtility.SnapToGround(transform.position, groundMask, groundRayHeight, 0.05f);
         }
 
         tickTimer -= Time.deltaTime;
@@ -250,14 +295,18 @@ public class SurvivorPoisonPoolZone : MonoBehaviour
 
         tickTimer = TickInterval;
 
-        Collider[] hits = Physics.OverlapSphere(transform.position, radius);
+        Collider[] hits = Physics.OverlapSphere(transform.position + Vector3.up * 0.2f, radius);
         for (int i = 0; i < hits.Length; i++)
         {
-            GameObject hitObject = hits[i].gameObject;
-            if (hitObject.GetComponent<ISurvivorDamageable>() == null)
+            ISurvivorDamageable damageable = hits[i].GetComponentInParent<ISurvivorDamageable>();
+            if (damageable == null)
                 continue;
 
-            SurvivorCombatFX.ApplyHit(hitObject, tickDamage, SurvivorElementType.Poison, Vector3.zero, 0f);
+            Component component = damageable as Component;
+            if (component == null)
+                continue;
+
+            SurvivorCombatFX.ApplyHit(component.gameObject, tickDamage, SurvivorElementType.Poison, Vector3.zero, 0f);
         }
     }
 }

@@ -2,19 +2,20 @@ using Unity.Netcode;
 using UnityEngine;
 
 /// <summary>
-/// Skeleton only. Marks where Multiplayer round/lobby logic will live once real networking
-/// (client-server combat sync, matchmaking, PvP state replication) gets its own dedicated
-/// design pass — this does not implement any of that yet.
+/// Multiplayer mode entry — wires NetworkManager bootstrap and marks SaturnGameMode.Multiplayer.
 /// </summary>
 public class MultiplayerGameMode : MonoBehaviour
 {
     public NetworkManager networkManager;
+    public SaturnNetworkBootstrap networkBootstrap;
 
     private void Awake()
     {
         SaturnGameModeState.CurrentMode = SaturnGameMode.Multiplayer;
 
-        if (networkManager == null)
-            networkManager = GetComponent<NetworkManager>();
+        networkBootstrap = SaturnNetworkBootstrap.EnsureExists();
+        networkManager = networkBootstrap.EnsureNetworkManager();
+        SaturnCloudMatchmaker.EnsureExists();
+        MatchSessionState.EnsureExists();
     }
 }

@@ -9,15 +9,15 @@ public class SurvivorWeaponManager : MonoBehaviour
 
     public IReadOnlyCollection<SurvivorWeaponBehavior> EquippedWeapons => equippedWeapons.Values;
 
-    /// <summary>Toggled with E. While on, manual/"active" weapons fire on their own cooldown like
-    /// auto weapons do; while off, they only fire while left-click is held.</summary>
-    public static bool AutoFireEnabled { get; private set; }
-    public KeyCode autoFireToggleKey = KeyCode.E;
+    /// <summary>Toggled with E. While locked, no weapons fire. While unlocked, only holding LMB
+    /// fires any weapon (manual aim also redirects toward the cursor).</summary>
+    public static bool FireLocked { get; private set; }
+    public KeyCode fireLockToggleKey = KeyCode.E;
 
     private void Update()
     {
-        if (Input.GetKeyDown(autoFireToggleKey))
-            AutoFireEnabled = !AutoFireEnabled;
+        if (Input.GetKeyDown(fireLockToggleKey))
+            FireLocked = !FireLocked;
     }
 
     /// <summary>Global multipliers layered on top of every weapon's own star-based stats, driven by buffs.</summary>
@@ -109,18 +109,31 @@ public class SurvivorWeaponManager : MonoBehaviour
 
     public void EquipOrUpgrade(SurvivorWeaponDataSO data)
     {
+        EquipOrUpgrade(data, 1);
+    }
+
+    /// <summary>Equip at startStar, or if already owned raise to max(current, startStar) then +1 if equal
+    /// only when startStar is the default upgrade path (startStar &lt;= current). Drop pickup uses max.</summary>
+    public void EquipOrUpgrade(SurvivorWeaponDataSO data, int startStar)
+    {
         if (data == null || controller == null)
             return;
 
+        int desiredStar = Mathf.Clamp(startStar, 1, data.MaxStar);
+
         if (equippedWeapons.TryGetValue(data.weaponId, out SurvivorWeaponBehavior weapon))
         {
-            UpgradeWeapon(weapon);
+            if (desiredStar > weapon.StarLevel)
+                weapon.SetStarLevel(desiredStar);
+            else
+                UpgradeWeapon(weapon);
+
             controller.NotifyLoadoutChanged();
             return;
         }
 
         SurvivorWeaponBehavior newWeapon = CreateWeaponBehavior(data);
-        newWeapon.Initialize(controller, data, 1);
+        newWeapon.Initialize(controller, data, desiredStar);
         equippedWeapons[data.weaponId] = newWeapon;
         controller.NotifyLoadoutChanged();
     }

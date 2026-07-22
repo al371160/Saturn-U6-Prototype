@@ -41,7 +41,13 @@ public class SurvivorAuraWeapon : SurvivorWeaponBehavior
         float radius = stats.range * rangeMultiplier;
 
         if (visual != null)
+        {
             visual.transform.localScale = Vector3.one * radius * 2f;
+            visual.SetActive(CanFire());
+        }
+
+        if (!CanFire())
+            return;
 
         float rateMultiplier = controller.WeaponManager != null ? controller.WeaponManager.RateMultiplier : 1f;
         tickTimer -= Time.deltaTime;
@@ -49,6 +55,7 @@ public class SurvivorAuraWeapon : SurvivorWeaponBehavior
             return;
 
         tickTimer = Mathf.Max(0.1f, rateMultiplier > 0f ? stats.rate / rateMultiplier : stats.rate);
+        PlayFireSfx();
         DealDamage(stats, radius);
     }
 

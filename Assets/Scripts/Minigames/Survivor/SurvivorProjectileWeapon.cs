@@ -34,14 +34,12 @@ public class SurvivorProjectileWeapon : SurvivorWeaponBehavior
     private void FireVolley(SurvivorWeaponStarStats stats)
     {
         Transform target = FindNearestTarget();
-        if (target == null)
+        if (!HasAimSolution(target))
             return;
 
-        Vector3 baseDirection = target.position - transform.position;
-        baseDirection.y = 0f;
-        if (baseDirection.sqrMagnitude < 0.01f)
-            baseDirection = transform.forward;
-        baseDirection.Normalize();
+        PlayFireSfx();
+
+        Vector3 baseDirection = ResolveFlatAimDirection(target);
 
         int shots = Mathf.Max(1, stats.count);
         float spreadStep = shots > 1 ? 12f : 0f;
@@ -95,7 +93,7 @@ public class SurvivorProjectileWeapon : SurvivorWeaponBehavior
     {
         GameObject projectileObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         projectileObject.name = "SurvivorProjectile";
-        projectileObject.transform.position = transform.position + Vector3.up * 0.6f;
+        projectileObject.transform.position = GetProjectileSpawnPosition();
         projectileObject.transform.localScale = Vector3.one * data.hitRadius * 1.6f;
 
         Collider col = projectileObject.GetComponent<Collider>();
@@ -122,6 +120,7 @@ public class SurvivorProjectile : MonoBehaviour
     private SurvivorElementType element;
     private float knockbackForce;
     private float lifetime = 2.5f;
+    private float hitRadius = 0.2f;
 
     public void Launch(Vector3 travelDirection, float travelSpeed, float hitDamage, SurvivorElementType hitElement = SurvivorElementType.None, float force = 0f)
     {
@@ -130,23 +129,38 @@ public class SurvivorProjectile : MonoBehaviour
         damage = hitDamage;
         element = hitElement;
         knockbackForce = force;
+        hitRadius = Mathf.Max(0.15f, transform.localScale.x * 0.5f);
     }
 
     private void Update()
     {
-        transform.position += direction * (speed * Time.deltaTime);
+        float step = speed * Time.deltaTime;
+        Vector3 start = transform.position;
+
+        // Sweep so fast shots don't tunnel through crate colliders.
+        if (Physics.SphereCast(start, hitRadius, direction, out RaycastHit sweepHit, step, ~0, QueryTriggerInteraction.Collide)
+            && sweepHit.collider.GetComponentInParent<ISurvivorDamageable>() != null)
+        {
+            ApplyHit(sweepHit.collider.gameObject);
+            return;
+        }
+
+        transform.position = start + direction * step;
+
+        if (SurvivorWeaponBehavior.TryGetDamageableHit(transform.position, hitRadius, out Collider overlapHit))
+        {
+            ApplyHit(overlapHit.gameObject);
+            return;
+        }
 
         lifetime -= Time.deltaTime;
         if (lifetime <= 0f)
             Destroy(gameObject);
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void ApplyHit(GameObject hitObject)
     {
-        if (other.GetComponent<ISurvivorDamageable>() == null)
-            return;
-
-        SurvivorCombatFX.ApplyHit(other.gameObject, damage, element, direction, knockbackForce);
+        SurvivorCombatFX.ApplyHit(hitObject, damage, element, direction, knockbackForce);
         Destroy(gameObject);
     }
 }

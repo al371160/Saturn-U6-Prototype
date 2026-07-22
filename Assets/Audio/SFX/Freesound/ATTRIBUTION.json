@@ -1,0 +1,641 @@
+[
+  {
+    "role": "flesh_impact",
+    "id": 342254,
+    "license": "licenses/by/3.0/",
+    "title": null,
+    "author": "Baldirideltasona",
+    "url": "https://freesound.org/s/342254/",
+    "file": "342254__Baldirideltasona__flesh_impact.mp3",
+    "bytes": 186178
+  },
+  {
+    "role": "wood_hit",
+    "id": 31769,
+    "license": "licenses/by/4.0/",
+    "title": null,
+    "author": "Slanesh",
+    "url": "https://freesound.org/s/31769/",
+    "file": "31769__Slanesh__wood_hit.mp3",
+    "bytes": 72508
+  },
+  {
+    "role": "metal_hit",
+    "id": 156606,
+    "license": "licenses/by/4.0/",
+    "title": null,
+    "author": "elektroproleter",
+    "url": "https://freesound.org/s/156606/",
+    "file": "156606__elektroproleter__metal_hit.mp3",
+    "bytes": 1556640
+  },
+  {
+    "role": "creature_hurt",
+    "id": 344966,
+    "license": "publicdomain/zero/1.0/",
+    "title": null,
+    "author": "VKProduktion",
+    "url": "https://freesound.org/s/344966/",
+    "file": "344966__VKProduktion__creature_hurt.mp3",
+    "bytes": 1144752
+  },
+  {
+    "role": "monster_growl",
+    "id": 162481,
+    "license": "publicdomain/zero/1.0/",
+    "title": null,
+    "author": "Kastenfrosch",
+    "url": "https://freesound.org/s/162481/",
+    "file": "162481__Kastenfrosch__monster_growl.mp3",
+    "bytes": 106550
+  },
+  {
+    "role": "zombie_hurt",
+    "id": 397355,
+    "license": "publicdomain/zero/1.0/",
+    "title": null,
+    "author": "plasterbrain",
+    "url": "https://freesound.org/s/397355/",
+    "file": "397355__plasterbrain__zombie_hurt.mp3",
+    "bytes": 42317
+  },
+  {
+    "role": "creature_death",
+    "id": 344968,
+    "license": "publicdomain/zero/1.0/",
+    "title": null,
+    "author": "VKProduktion",
+    "url": "https://freesound.org/s/344968/",
+    "file": "344968__VKProduktion__creature_death.mp3",
+    "bytes": 337344
+  },
+  {
+    "role": "boss_roar",
+    "id": 26777,
+    "license": "licenses/by/4.0/",
+    "title": null,
+    "author": "junggle",
+    "url": "https://freesound.org/s/26777/",
+    "file": "26777__junggle__boss_roar.mp3",
+    "bytes": 3494
+  },
+  {
+    "role": "crate_hit",
+    "id": 31623,
+    "license": "licenses/by/3.0/",
+    "title": null,
+    "author": "Srehpog",
+    "url": "https://freesound.org/s/31623/",
+    "file": "31623__Srehpog__crate_hit.mp3",
+    "bytes": 18143
+  },
+  {
+    "role": "crate_break",
+    "id": 66778,
+    "license": "publicdomain/zero/1.0/",
+    "title": null,
+    "author": "kevinkace",
+    "url": "https://freesound.org/s/66778/",
+    "file": "66778__kevinkace__crate_break.mp3",
+    "bytes": 30268
+  },
+  {
+    "role": "box_smash",
+    "id": 562189,
+    "license": "publicdomain/zero/1.0/",
+    "title": null,
+    "author": "gristi",
+    "url": "https://freesound.org/s/562189/",
+    "file": "562189__gristi__box_smash.mp3",
+    "bytes": 27168
+  },
+  {
+    "role": "gunshot_synth",
+    "id": 387232,
+    "license": "publicdomain/zero/1.0/",
+    "title": null,
+    "author": "steaq",
+    "url": "https://freesound.org/s/387232/",
+    "file": "387232__steaq__gunshot_synth.mp3",
+    "bytes": 74509
+  },
+  {
+    "role": "pew_laser",
+    "id": 270332,
+    "license": "licenses/by/4.0/",
+    "title": null,
+    "author": "LittleRobotSoundFactory",
+    "url": "https://freesound.org/s/270332/",
+    "file": "270332__LittleRobotSoundFactory__pew_laser.mp3",
+    "bytes": 5793
+  },
+  {
+    "role": "melee_whoosh",
+    "id": 60013,
+    "license": "publicdomain/zero/1.0/",
+    "title": null,
+    "author": "qubodup",
+    "url": "https://freesound.org/s/60013/",
+    "file": "60013__qubodup__melee_whoosh.mp3",
+    "bytes": 11897
+  },
+  {
+    "role": "boomerang",
+    "id": 242501,
+    "license": "publicdomain/zero/1.0/",
+    "title": null,
+    "author": "GabrielAraujo",
+    "url": "https://freesound.org/s/242501/",
+    "file": "242501__GabrielAraujo__boomerang.mp3",
+    "bytes": 23585
+  },
+  {
+    "role": "magic_zap",
+    "id": 387186,
+    "license": "publicdomain/zero/1.0/",
+    "title": null,
+    "author": "AlexIero_1",
+    "url": "https://freesound.org/s/387186/",
+    "file": "387186__AlexIero_1__magic_zap.mp3",
+    "bytes": 10437
+  },
+  {
+    "role": "drippy",
+    "id": 162482,
+    "license": "publicdomain/zero/1.0/",
+    "title": null,
+    "author": "Kastenfrosch",
+    "url": "https://freesound.org/s/162482/",
+    "file": "162482__Kastenfrosch__drippy.mp3",
+    "bytes": 98543
+  },
+  {
+    "role": "explosion",
+    "id": 244745,
+    "license": "publicdomain/zero/1.0/",
+    "author": "Reitanna",
+    "url": "https://freesound.org/s/244745/",
+    "file": "244745__Reitanna__explosion.mp3",
+    "bytes": 16224
+  },
+  {
+    "role": "explosion2",
+    "id": 332067,
+    "license": "publicdomain/zero/1.0/",
+    "author": "brentorama",
+    "url": "https://freesound.org/s/332067/",
+    "file": "332067__brentorama__explosion2.mp3",
+    "bytes": 257217
+  },
+  {
+    "role": "laser",
+    "id": 162480,
+    "license": "publicdomain/zero/1.0/",
+    "author": "Kastenfrosch",
+    "url": "https://freesound.org/s/162480/",
+    "file": "162480__Kastenfrosch__laser.mp3",
+    "bytes": 84598
+  },
+  {
+    "role": "rifle",
+    "id": 387233,
+    "license": "licenses/by/4.0/",
+    "author": "eardeer",
+    "url": "https://freesound.org/s/387233/",
+    "file": "387233__eardeer__rifle.mp3",
+    "bytes": 498360
+  },
+  {
+    "role": "punch_short",
+    "id": 274183,
+    "license": "licenses/by/4.0/",
+    "author": "LittleRobotSoundFactory",
+    "url": "https://freesound.org/s/274183/",
+    "file": "274183__LittleRobotSoundFactory__punch_short.mp3",
+    "bytes": 49344
+  },
+  {
+    "role": "slime_hit",
+    "id": 162479,
+    "license": "publicdomain/zero/1.0/",
+    "author": "Kastenfrosch",
+    "url": "https://freesound.org/s/162479/",
+    "file": "162479__Kastenfrosch__slime_hit.mp3",
+    "bytes": 85517
+  },
+  {
+    "role": "stone_hit",
+    "id": 178643,
+    "license": "licenses/by/4.0/",
+    "author": "Zabuhailo",
+    "url": "https://freesound.org/s/178643/",
+    "file": "178643__Zabuhailo__stone_hit.mp3",
+    "bytes": 640128
+  },
+  {
+    "role": "ice_crack",
+    "id": 221528,
+    "license": "publicdomain/zero/1.0/",
+    "author": "unfa",
+    "url": "https://freesound.org/s/221528/",
+    "file": "221528__unfa__ice_crack.mp3",
+    "bytes": 47856,
+    "title": "Freesound - Glass Break by unfa"
+  },
+  {
+    "role": "ice_whoosh",
+    "id": 344310,
+    "license": "licenses/by/3.0/",
+    "author": "MusicLegends",
+    "url": "https://freesound.org/s/344310/",
+    "file": "344310__MusicLegends__ice_whoosh.mp3",
+    "bytes": 6157,
+    "title": "Freesound - Laser shoot by MusicLegends"
+  },
+  {
+    "role": "freeze_spell",
+    "id": 341695,
+    "license": "licenses/by/4.0/",
+    "author": "AceOfSpadesProduc100",
+    "url": "https://freesound.org/s/341695/",
+    "file": "341695__AceOfSpadesProduc100__freeze_spell.mp3",
+    "bytes": 13672,
+    "title": "Freesound - Coins 1 by AceOfSpadesProduc100"
+  },
+  {
+    "role": "fire_whoosh",
+    "id": 145441,
+    "license": "licenses/by/3.0/",
+    "author": "Soughtaftersounds",
+    "url": "https://freesound.org/s/145441/",
+    "file": "145441__Soughtaftersounds__fire_whoosh.mp3",
+    "bytes": 30580,
+    "title": "Freesound - Menu Glass Click by Soughtaftersounds"
+  },
+  {
+    "role": "fireball",
+    "id": 162539,
+    "license": "publicdomain/zero/1.0/",
+    "author": "Chippy569",
+    "url": "https://freesound.org/s/162539/",
+    "file": "162539__Chippy569__fireball.mp3",
+    "bytes": 1909920,
+    "title": "Freesound - 34EBrakeNT1a.wav by Chippy569"
+  },
+  {
+    "role": "flame_burst",
+    "id": 341250,
+    "license": "publicdomain/zero/1.0/",
+    "author": "jeremysykes",
+    "url": "https://freesound.org/s/341250/",
+    "file": "341250__jeremysykes__flame_burst.mp3",
+    "bytes": 3130,
+    "title": "Freesound - Select01.wav by jeremysykes"
+  },
+  {
+    "role": "metal_clash",
+    "id": 320181,
+    "license": "publicdomain/zero/1.0/",
+    "author": "dland",
+    "url": "https://freesound.org/s/320181/",
+    "file": "320181__dland__metal_clash.mp3",
+    "bytes": 8141,
+    "title": "Freesound - hint.wav by dland"
+  },
+  {
+    "role": "knife_throw",
+    "id": 317069,
+    "license": "publicdomain/zero/1.0/",
+    "author": "4y4i",
+    "url": "https://freesound.org/s/317069/",
+    "file": "317069__4y4i__knife_throw.mp3",
+    "bytes": 1291606,
+    "title": "Freesound - Intro by 4y4i"
+  },
+  {
+    "role": "sword_swing",
+    "id": 250712,
+    "license": "licenses/by/4.0/",
+    "author": "Aiwha",
+    "url": "https://freesound.org/s/250712/",
+    "file": "250712__Aiwha__sword_swing.mp3",
+    "bytes": 30792,
+    "title": "Freesound - Explosion by Aiwha"
+  },
+  {
+    "role": "poison_bubble",
+    "id": 244655,
+    "license": "publicdomain/zero/1.0/",
+    "author": "D.S.G.",
+    "url": "https://freesound.org/s/244655/",
+    "file": "244655__D.S.G.__poison_bubble.mp3",
+    "bytes": 3862,
+    "title": "Freesound - Pop 1 by D.S.G."
+  },
+  {
+    "role": "slime_squish",
+    "id": 162478,
+    "license": "publicdomain/zero/1.0/",
+    "author": "Kastenfrosch",
+    "url": "https://freesound.org/s/162478/",
+    "file": "162478__Kastenfrosch__slime_squish.mp3",
+    "bytes": 69687,
+    "title": "Freesound - PassagierAbsetzen.mp3 by Kastenfrosch"
+  },
+  {
+    "role": "electric_zap",
+    "id": 387232,
+    "license": "publicdomain/zero/1.0/",
+    "author": "steaq",
+    "url": "https://freesound.org/s/387232/",
+    "file": "387232__steaq__electric_zap.mp3",
+    "bytes": 74509,
+    "title": "Freesound - Badge Coin Win by steaq"
+  },
+  {
+    "role": "electric_arc",
+    "id": 341695,
+    "license": "licenses/by/4.0/",
+    "author": "AceOfSpadesProduc100",
+    "url": "https://freesound.org/s/341695/",
+    "file": "341695__AceOfSpadesProduc100__electric_arc.mp3",
+    "bytes": 13672,
+    "title": "Freesound - Coins 1 by AceOfSpadesProduc100"
+  },
+  {
+    "role": "ambient_forest",
+    "id": 132111,
+    "license": "licenses/by/4.0/",
+    "author": "miastodzwiekow",
+    "url": "https://freesound.org/s/132111/",
+    "file": "132111__miastodzwiekow__ambient_forest.mp3",
+    "bytes": 1967463,
+    "title": "Freesound - 111022-old market.wav by miastodzwiekow"
+  },
+  {
+    "role": "ambient_dark",
+    "id": 243701,
+    "license": "publicdomain/zero/1.0/",
+    "author": "ertfelda",
+    "url": "https://freesound.org/s/243701/",
+    "file": "243701__ertfelda__ambient_dark.mp3",
+    "bytes": 9394,
+    "title": "Freesound - correct by ertfelda"
+  },
+  {
+    "role": "ambient_sci_fi",
+    "id": 243702,
+    "license": "licenses/by/4.0/",
+    "author": "klankbeeld",
+    "url": "https://freesound.org/s/243702/",
+    "file": "243702__klankbeeld__ambient_sci_fi.mp3",
+    "bytes": 3951456,
+    "title": "Freesound - horror ambience 77 140716_0300.wav by klankbeeld"
+  },
+  {
+    "role": "ambient_battle",
+    "id": 18765,
+    "license": "licenses/by/4.0/",
+    "author": "reinsamba",
+    "url": "https://freesound.org/s/18765/",
+    "file": "18765__reinsamba__ambient_battle.mp3",
+    "bytes": 3562802,
+    "title": "Freesound - evening in the forest.wav by reinsamba"
+  },
+  {
+    "role": "fire_effect",
+    "id": 424994,
+    "license": "licenses/by/4.0/",
+    "author": "GregorQuendel",
+    "url": "https://freesound.org/s/424994/",
+    "file": "424994__GregorQuendel__fire_effect.mp3",
+    "bytes": 156960,
+    "title": "Fire - Effects - Textures - Glitch 01 by GregorQuendel"
+  },
+  {
+    "role": "lightning_effect",
+    "id": 828488,
+    "license": "licenses/by/4.0/",
+    "author": "Artninja",
+    "url": "https://freesound.org/s/828488/",
+    "file": "828488__Artninja__lightning_effect.mp3",
+    "bytes": 619883,
+    "title": "custom_zapping_continuous_electricity_arcing_sounds_10022025 by Artninja"
+  },
+  {
+    "role": "ambient_wind2",
+    "id": 651540,
+    "license": "licenses/by/4.0/",
+    "author": "nsstudios",
+    "url": "https://freesound.org/s/651540/",
+    "file": "651540__nsstudios__ambient_wind2.mp3",
+    "bytes": 860280,
+    "title": "wind draft loop 2 by nsstudios"
+  },
+  {
+    "role": "ambient_forest2",
+    "id": 850507,
+    "license": "publicdomain/zero/1.0/",
+    "author": "GammaGool",
+    "url": "https://freesound.org/s/850507/",
+    "file": "850507__GammaGool__ambient_forest2.mp3",
+    "bytes": 1492346,
+    "title": "Birds in the Slovenian Forest - Processed w/ Generated Noise by GammaGool"
+  },
+  {
+    "role": "ice_effect",
+    "id": 735353,
+    "license": "publicdomain/zero/1.0/",
+    "author": "Vrymaa",
+    "url": "https://freesound.org/s/735353/",
+    "file": "735353__Vrymaa__ice_effect.mp3",
+    "bytes": 1646739,
+    "title": "Ice - Cristal cave by Vrymaa"
+  },
+  {
+    "role": "metal_kunai",
+    "id": 563171,
+    "license": "licenses/by/4.0/",
+    "author": "gronnie",
+    "url": "https://freesound.org/s/563171/",
+    "file": "563171__gronnie__metal_kunai.mp3",
+    "bytes": 13248,
+    "title": "Sword_Swing_1.wav by gronnie"
+  },
+  {
+    "role": "poison_effect",
+    "id": 448891,
+    "license": "publicdomain/zero/1.0/",
+    "author": "jtap97",
+    "url": "https://freesound.org/s/448891/",
+    "file": "448891__jtap97__poison_effect.mp3",
+    "bytes": 127444,
+    "title": "slime noise 4_1.wav by jtap97"
+  },
+  {
+    "role": "hammer_hit",
+    "id": 515860,
+    "license": "publicdomain/zero/1.0/",
+    "author": "davethefxguy",
+    "url": "https://freesound.org/s/515860/",
+    "file": "515860__davethefxguy__hammer_hit.mp3",
+    "bytes": 700608,
+    "title": "Hammer hitting body by davethefxguy"
+  },
+  {
+    "role": "pistol_shot",
+    "id": 718965,
+    "license": "licenses/by/4.0/",
+    "title": "Freesound - Pistol Shot 2 by TB0Y298",
+    "author": "TB0Y298",
+    "url": "https://freesound.org/s/718965/",
+    "file": "718965__TB0Y298__pistol_shot.mp3",
+    "bytes": 5856
+  },
+  {
+    "role": "pistol_shot_b",
+    "id": 718174,
+    "license": "licenses/by/4.0/",
+    "title": "Freesound - Pistol Shot 1 by TB0Y298",
+    "author": "TB0Y298",
+    "url": "https://freesound.org/s/718174/",
+    "file": "718174__TB0Y298__pistol_shot_b.mp3",
+    "bytes": 6192
+  },
+  {
+    "role": "stun_zap",
+    "id": 264779,
+    "license": "publicdomain/zero/1.0/",
+    "title": "Freesound - Civilian Stun Gun 1/10s zap by AnthonyChan0",
+    "author": "AnthonyChan0",
+    "url": "https://freesound.org/s/264779/",
+    "file": "264779__AnthonyChan0__stun_zap.mp3",
+    "bytes": 4104
+  },
+  {
+    "role": "gun_impact",
+    "id": 728516,
+    "license": "publicdomain/zero/1.0/",
+    "title": "Freesound - Gun Like Impact Shot by doudar41",
+    "author": "doudar41",
+    "url": "https://freesound.org/s/728516/",
+    "file": "728516__doudar41__gun_impact.mp3",
+    "bytes": 12240
+  },
+  {
+    "role": "punch_thud",
+    "id": 411207,
+    "license": "publicdomain/zero/1.0/",
+    "title": "Freesound - SillyEnglishRhythmText by balloonhead",
+    "author": "balloonhead",
+    "url": "https://freesound.org/s/411207/",
+    "file": "411207__balloonhead__punch_thud.mp3",
+    "bytes": 281904
+  },
+  {
+    "role": "body_hit",
+    "id": 511487,
+    "license": "licenses/by-nc/4.0/",
+    "title": "Freesound - Piano Ambiance, Misc &amp; Drums (Remix - 165209-50101-41589-22129)-(100 BPM) by Erokia",
+    "author": "Erokia",
+    "url": "https://freesound.org/s/511487/",
+    "file": "511487__Erokia__body_hit.mp3",
+    "bytes": 1000752
+  },
+  {
+    "role": "male_hurt",
+    "id": 342255,
+    "license": "publicdomain/zero/1.0/",
+    "title": "Freesound - buildup.wav by SonOfTheSinfull",
+    "author": "SonOfTheSinfull",
+    "url": "https://freesound.org/s/342255/",
+    "file": "342255__SonOfTheSinfull__male_hurt.mp3",
+    "bytes": 75624
+  },
+  {
+    "role": "pain_grunt",
+    "id": 344967,
+    "license": "publicdomain/zero/1.0/",
+    "title": "Freesound - Man Doing Dove Call by mrmunk",
+    "author": "mrmunk",
+    "url": "https://freesound.org/s/344967/",
+    "file": "344967__mrmunk__pain_grunt.mp3",
+    "bytes": 35160
+  },
+  {
+    "role": "short_punch",
+    "id": 416286,
+    "license": "publicdomain/zero/1.0/",
+    "title": "Freesound - Rummaging through Pockets.wav by Fugeni",
+    "author": "Fugeni",
+    "url": "https://freesound.org/s/416286/",
+    "file": "416286__Fugeni__short_punch.mp3",
+    "bytes": 27168
+  },
+  {
+    "role": "wood_thud",
+    "id": 219466,
+    "license": "publicdomain/zero/1.0/",
+    "title": "Freesound - Jet Takeoff 1.WAV by bigpickle51",
+    "author": "bigpickle51",
+    "url": "https://freesound.org/s/219466/",
+    "file": "219466__bigpickle51__wood_thud.mp3",
+    "bytes": 227976
+  },
+  {
+    "role": "metal_clang",
+    "id": 320181,
+    "license": "publicdomain/zero/1.0/",
+    "title": "Freesound - hint.wav by dland",
+    "author": "dland",
+    "url": "https://freesound.org/s/320181/",
+    "file": "320181__dland__metal_clang.mp3",
+    "bytes": 2064
+  },
+  {
+    "role": "ricochet",
+    "id": 157119,
+    "license": "licenses/by/4.0/",
+    "title": "Freesound - Can drop foley by Slave2theLight",
+    "author": "Slave2theLight",
+    "url": "https://freesound.org/s/157119/",
+    "file": "157119__Slave2theLight__ricochet.mp3",
+    "bytes": 99144
+  },
+  {
+    "role": "pain_grunt_a",
+    "id": 547209,
+    "license": "publicdomain/zero/1.0/",
+    "author": "MrFossy",
+    "url": "https://freesound.org/s/547209/",
+    "file": "547209__MrFossy__pain_grunt_a.mp3",
+    "bytes": 3168
+  },
+  {
+    "role": "pain_grunt_b",
+    "id": 547203,
+    "license": "publicdomain/zero/1.0/",
+    "author": "MrFossy",
+    "url": "https://freesound.org/s/547203/",
+    "file": "547203__MrFossy__pain_grunt_b.mp3",
+    "bytes": 3168
+  },
+  {
+    "role": "pain_grunt_c",
+    "id": 547200,
+    "license": "publicdomain/zero/1.0/",
+    "author": "MrFossy",
+    "url": "https://freesound.org/s/547200/",
+    "file": "547200__MrFossy__pain_grunt_c.mp3",
+    "bytes": 3384
+  },
+  {
+    "role": "punch_impact",
+    "id": 94858,
+    "license": "licenses/sampling+/1.0/",
+    "author": "cjosephwalker",
+    "url": "https://freesound.org/s/94858/",
+    "file": "94858__cjosephwalker__punch_impact.mp3",
+    "bytes": 5040
+  }
+]

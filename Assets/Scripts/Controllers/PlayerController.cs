@@ -77,6 +77,9 @@ public class PlayerController : MonoBehaviour
     private bool isGliding = false;
     public bool isInFreefall = false;
     public bool IsGliding => isGliding;
+    [Tooltip("Must be airborne at least this long before freefall/glide can unlock. Prevents platform landings from falsely entering glide.")]
+    public float freefallMinAirborneTime = 0.35f;
+    private float airborneTimer;
 
     [Header("Skydive (battle bus jump)")]
     [Tooltip("Fall speed the skydive gradually decelerates/accelerates towards, distinct from glide's instant clamp.")]
@@ -301,34 +304,59 @@ public class PlayerController : MonoBehaviour
 
 
         //Debug.Log(currentStamina);
-        // Ground Check
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+        // Ground Check — sphere (Ground layer) OR CharacterController contact.
+        // Platforms/decks often sit on Default and miss groundMask, which used to unlock freefall/glide.
+        bool wasGrounded = isGrounded;
+        bool groundedByMask = groundCheck != null && Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+        bool groundedByController = controller != null && controller.isGrounded;
+        bool groundedByProbe = false;
+        if (!groundedByMask && !groundedByController && groundCheck != null)
+        {
+            groundedByProbe = Physics.Raycast(
+                groundCheck.position + Vector3.up * 0.08f,
+                Vector3.down,
+                groundDistance + 0.25f,
+                ~0,
+                QueryTriggerInteraction.Ignore);
+        }
+
+        isGrounded = groundedByMask || groundedByController || groundedByProbe;
         if (isGrounded)
         {
+            airborneTimer = 0f;
+            if (!wasGrounded)
+                PlayLandSfx();
+
             if (velocity.y < 0)
                 velocity.y = -2f;
             isInFreefall = false;
             isSkydiving = false;
+            isGliding = false;
             airJumpsRemaining = Mathf.Max(0, maxAirJumps);
+            PlayerAudioHub.Instance?.StopWind();
         }
-        else if (velocity.y <= freefallEnterVelocity)
+        else
         {
-            // Once falling fast enough, unlock freefall — hold Space to deploy freefall glide.
-            if (!isInFreefall)
+            airborneTimer += Time.deltaTime;
+            if (velocity.y <= freefallEnterVelocity && airborneTimer >= freefallMinAirborneTime)
             {
-                EnsureAimRig();
-                if (aimRig != null)
+                // Once falling fast enough for long enough, unlock freefall — hold Space to glide.
+                if (!isInFreefall)
                 {
-                    skydiveVisualYaw = aimRig.CameraYaw;
-                    skydiveVisualPitch = aimRig.CameraPitch;
+                    EnsureAimRig();
+                    if (aimRig != null)
+                    {
+                        skydiveVisualYaw = aimRig.CameraYaw;
+                        skydiveVisualPitch = aimRig.CameraPitch;
+                    }
+                    else
+                    {
+                        skydiveVisualYaw = transform.eulerAngles.y;
+                        skydiveVisualPitch = 0f;
+                    }
                 }
-                else
-                {
-                    skydiveVisualYaw = transform.eulerAngles.y;
-                    skydiveVisualPitch = 0f;
-                }
+                isInFreefall = true;
             }
-            isInFreefall = true;
         }
 
         // Keep trail state in sync even if we early-out for swimming below.
@@ -373,6 +401,7 @@ public class PlayerController : MonoBehaviour
                 if (jumpParticles != null)
                     jumpParticles.Play();
 
+                // Single jump SFX — legacy source if wired, otherwise hub (never both).
                 if (jumpAudioSource != null && jumpClip != null)
                 {
                     jumpAudioSource.clip = jumpClip;
@@ -383,6 +412,10 @@ public class PlayerController : MonoBehaviour
                         jumpAudioSource.pitch = 1f;
 
                     jumpAudioSource.Play();
+                }
+                else
+                {
+                    PlayerAudioHub.Instance?.PlayLibrary(lib => lib.jump, 0.85f);
                 }
             }
         }
@@ -597,11 +630,19 @@ public class PlayerController : MonoBehaviour
                 else
                     runAudioSource.pitch = walkAudioPitch;
             }
+
+            // Fallback footstep loop when the legacy run AudioSource isn't wired.
+            if ((runAudioSource == null || runClip == null) && PlayerAudioHub.Instance != null
+                && PlayerAudioHub.Instance.Library != null && PlayerAudioHub.Instance.Library.footstep != null)
+            {
+                PlayerAudioHub.Instance.StartLoop(PlayerAudioHub.Instance.Library.footstep, isSprinting ? 0.55f : 0.4f);
+            }
         }
         else
         {
-            if (runAudioSource.isPlaying)
+            if (runAudioSource != null && runAudioSource.isPlaying)
                 runAudioSource.Stop();
+            PlayerAudioHub.Instance?.StopLoop();
         }
     }
 
@@ -930,25 +971,43 @@ public class PlayerController : MonoBehaviour
         if (playerAnim != null)
             playerAnim.SetBool("isGliding", gliding);
 
+        bool flying = gliding || isSkydiving || isInFreefall;
+        PlayerAudioHub hub = PlayerAudioHub.Instance;
+        PlayerAudioLibrary lib = hub != null ? hub.Library : null;
+
         if (gliding)
         {
-            if (glideAudioSource != null && glideClip != null && !glideAudioSource.isPlaying)
+            if (glideAudioSource != null && glideClip != null)
             {
-                glideAudioSource.clip = glideClip;
-                glideAudioSource.loop = true;
-
-                if (randomizePitch)
-                    glideAudioSource.pitch = Random.Range(minPitch, maxPitch);
-                else
-                    glideAudioSource.pitch = 1f;
-
-                glideAudioSource.Play();
+                if (!glideAudioSource.isPlaying)
+                {
+                    glideAudioSource.clip = glideClip;
+                    glideAudioSource.loop = true;
+                    glideAudioSource.pitch = randomizePitch ? Random.Range(minPitch, maxPitch) : 1f;
+                    glideAudioSource.Play();
+                }
+            }
+            else if (lib != null && lib.glideLoop != null)
+            {
+                hub?.StartGlide(lib.glideLoop, 0.4f);
             }
         }
-        else if (glideAudioSource != null && glideAudioSource.isPlaying)
+        else
         {
-            glideAudioSource.Stop();
+            if (glideAudioSource != null && glideAudioSource.isPlaying)
+                glideAudioSource.Stop();
+            hub?.StopGlide();
         }
+
+        if (flying && lib != null && lib.windLoop != null)
+            hub?.StartWind(lib.windLoop, 0.32f);
+        else
+            hub?.StopWind();
+    }
+
+    private void PlayLandSfx()
+    {
+        PlayerAudioHub.Instance?.PlayLibrary(lib => lib.land, 0.7f);
     }
 
     private void SetGlideTrailsEmitting(bool emitting)

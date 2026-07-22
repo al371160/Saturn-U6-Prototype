@@ -19,13 +19,6 @@ public class SkyboxTintByHeight : MonoBehaviour
     public Color iceFogColor = new Color(0.9f, 0.95f, 1f);
     public Color sunsetFogColor = new Color(0.6f, 0.4f, 0.7f);
 
-    [Header("Oxygen Danger Tint")]
-    [Tooltip("Sky tint blended in when oxygen is critically low.")]
-    public Color oxygenDangerSkyTint = new Color(0.6f, 0.05f, 0.05f);
-    public Color oxygenDangerFogColor = new Color(0.5f, 0.1f, 0.1f);
-    [Tooltip("Oxygen fraction at which the danger tint starts fading in.")]
-    public float oxygenDangerThreshold = 0.4f;
-
     [Header("Transition")]
     public float fadeSpeed = 2f;
 
@@ -61,18 +54,6 @@ public class SkyboxTintByHeight : MonoBehaviour
             float t = Mathf.InverseLerp(iceMaxHeight, iceMaxHeight + 30f, height);
             targetSkyTint = Color.Lerp(iceSkyTint, sunsetSkyTint, t);
             targetFogColor = Color.Lerp(iceFogColor, sunsetFogColor, t);
-        }
-
-        // Blend in oxygen danger tint when oxygen is low
-        if (OxygenSystem.Instance != null)
-        {
-            float oxyFraction = OxygenSystem.Instance.OxygenFraction;
-            if (oxyFraction < oxygenDangerThreshold)
-            {
-                float dangerT = 1f - (oxyFraction / oxygenDangerThreshold);
-                targetSkyTint = Color.Lerp(targetSkyTint, oxygenDangerSkyTint, dangerT);
-                targetFogColor = Color.Lerp(targetFogColor, oxygenDangerFogColor, dangerT);
-            }
         }
 
         currentSkyTint = Color.Lerp(currentSkyTint, targetSkyTint, Time.deltaTime * fadeSpeed);

@@ -34,7 +34,8 @@ public class SurvivorBoomerangWeapon : SurvivorWeaponBehavior
 
     private void FireVolley(SurvivorWeaponStarStats stats)
     {
-        Vector3 direction = FindAimDirection();
+        PlayFireSfx();
+        Vector3 direction = ResolveFlatAimDirection(FindNearestTarget());
 
         int shots = Mathf.Max(1, stats.count);
         float spreadStep = shots > 1 ? 25f : 0f;
@@ -49,17 +50,6 @@ public class SurvivorBoomerangWeapon : SurvivorWeaponBehavior
             Vector3 dir = Quaternion.Euler(0f, angle, 0f) * direction;
             SpawnBoomerang(dir, stats.damage * damageMultiplier, stats.range * rangeMultiplier);
         }
-    }
-
-    private Vector3 FindAimDirection()
-    {
-        Transform target = FindNearestTarget();
-        if (target == null)
-            return transform.forward;
-
-        Vector3 direction = target.position - transform.position;
-        direction.y = 0f;
-        return direction.sqrMagnitude > 0.01f ? direction.normalized : transform.forward;
     }
 
     private Transform FindNearestTarget()
@@ -97,7 +87,7 @@ public class SurvivorBoomerangWeapon : SurvivorWeaponBehavior
     {
         GameObject projectileObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         projectileObject.name = "SurvivorBoomerang";
-        projectileObject.transform.position = transform.position + Vector3.up * 0.6f;
+        projectileObject.transform.position = GetProjectileSpawnPosition();
         projectileObject.transform.localScale = Vector3.one * data.hitRadius * 1.8f;
 
         Collider col = projectileObject.GetComponent<Collider>();
@@ -127,6 +117,7 @@ public class SurvivorBoomerangProjectile : MonoBehaviour
     private float outboundTimer = 0.45f;
     private bool returning;
     private float lifetime = 3f;
+    private readonly HashSet<int> hitIds = new HashSet<int>();
 
     public void Launch(Transform ownerTransform, Vector3 travelDirection, float travelSpeed, float hitDamage, SurvivorElementType hitElement, float force)
     {
@@ -167,13 +158,21 @@ public class SurvivorBoomerangProjectile : MonoBehaviour
 
             transform.position += toOwner.normalized * (speed * Time.deltaTime);
         }
+
+        TryHitDamageables();
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void TryHitDamageables()
     {
-        if (other.GetComponent<ISurvivorDamageable>() == null)
+        float radius = Mathf.Max(0.2f, transform.localScale.x * 0.5f);
+        if (!SurvivorWeaponBehavior.TryGetDamageableHit(transform.position, radius, out Collider hit))
             return;
 
-        SurvivorCombatFX.ApplyHit(other.gameObject, damage, element, direction, knockbackForce);
+        Component damageable = hit.GetComponentInParent<ISurvivorDamageable>() as Component;
+        int id = damageable != null ? damageable.GetInstanceID() : hit.GetInstanceID();
+        if (!hitIds.Add(id))
+            return;
+
+        SurvivorCombatFX.ApplyHit(hit.gameObject, damage, element, direction, knockbackForce);
     }
 }

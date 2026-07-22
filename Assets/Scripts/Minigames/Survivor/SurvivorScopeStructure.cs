@@ -45,6 +45,8 @@ public class SurvivorScopeStructure : MonoBehaviour, ISurvivorDamageable
 
     private void Die()
     {
+        SurvivorAudio.PlayDestroyForTarget(gameObject);
+
         if (possibleScopes != null && possibleScopes.Length > 0)
         {
             SurvivorBuffDataSO chosen = possibleScopes[Random.Range(0, possibleScopes.Length)];

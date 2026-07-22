@@ -21,6 +21,5 @@ MonoBehaviour:
   statToChange: 1
   amountToChangeStat: 1
   suitMaxWeight: 10
-  suitMaxAltitude: 50
   suitMaxSpeed: 8
   requiredMinigame: 0

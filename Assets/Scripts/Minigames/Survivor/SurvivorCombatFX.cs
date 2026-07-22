@@ -19,18 +19,22 @@ public static class SurvivorCombatFX
         if (targetObject == null)
             return;
 
-        ISurvivorDamageable damageable = targetObject.GetComponent<ISurvivorDamageable>();
+        ISurvivorDamageable damageable = targetObject.GetComponentInParent<ISurvivorDamageable>();
         if (damageable == null)
             return;
 
+        Component damageableComponent = damageable as Component;
+        GameObject rootObject = damageableComponent != null ? damageableComponent.gameObject : targetObject;
+
         damageable.TakeDamage(damage);
-        ShowDamage(targetObject.transform.position + Vector3.up * 1.2f, damage, ColorForElement(element));
+        ShowDamage(rootObject.transform.position + Vector3.up * 1.2f, damage, ColorForElement(element));
+        SurvivorAudio.PlayHitForTarget(rootObject);
 
         if (element != SurvivorElementType.None)
         {
-            SurvivorStatusEffect status = targetObject.GetComponent<SurvivorStatusEffect>();
+            SurvivorStatusEffect status = rootObject.GetComponent<SurvivorStatusEffect>();
             if (status == null)
-                status = targetObject.AddComponent<SurvivorStatusEffect>();
+                status = rootObject.AddComponent<SurvivorStatusEffect>();
 
             status.ApplyElement(element, damage);
         }
@@ -38,7 +42,7 @@ public static class SurvivorCombatFX
         float effectiveKnockbackForce = Mathf.Max(knockbackForce, damage * MinimumKnockbackPerDamage);
         if (effectiveKnockbackForce > 0f)
         {
-            ISurvivorStatusTarget target = targetObject.GetComponent<ISurvivorStatusTarget>();
+            ISurvivorStatusTarget target = rootObject.GetComponentInParent<ISurvivorStatusTarget>();
             target?.ApplyKnockback(knockbackDirection, effectiveKnockbackForce);
         }
     }

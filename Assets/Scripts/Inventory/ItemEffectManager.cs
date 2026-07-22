@@ -81,13 +81,11 @@ public class ItemEffectManager : MonoBehaviour
             if (nowEquipped)
             {
                 equippedSuit = item;
-                OxygenSystem.Instance?.ApplySuit(item.suitMaxAltitude);
                 if (pc != null) pc.sprintSpeed = item.suitMaxSpeed;
             }
             else
             {
                 equippedSuit = null;
-                OxygenSystem.Instance?.RemoveSuit();
                 if (pc != null) pc.sprintSpeed = pc.walkSpeed; // reset to default
             }
         }

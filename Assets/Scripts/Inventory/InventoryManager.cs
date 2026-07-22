@@ -50,13 +50,19 @@ public class InventoryManager : MonoBehaviour
         {
             audioSource = gameObject.AddComponent<AudioSource>();
         }
+
+        if (uiManager == null)
+            uiManager = FindFirstObjectByType<UIManager>();
+        if (playerController == null)
+            playerController = FindFirstObjectByType<PlayerController>();
     }
 
     void Update()
     {
         if (Input.GetButtonDown("Inventory"))
         {
-            uiManager.ClearUI();
+            if (uiManager != null)
+                uiManager.ClearUI();
             if (!menuActivated)
             {
                 OpenInventory();
@@ -71,23 +77,22 @@ public class InventoryManager : MonoBehaviour
     private void OpenInventory()
     {
         inventoryMenu.SetActive(true);
-        bubblePop1.PlayPop();
-        bubblePop2.PlayPop();
+        if (bubblePop1 != null)
+            bubblePop1.PlayPop();
+        if (bubblePop2 != null)
+            bubblePop2.PlayPop();
         menuActivated = true;
 
         // Slow down time if you want
         // Time.timeScale = 0.2f;
 
-        if (openSound != null)
-        {
+        // Single open SFX — prefer hub, else local clip (never both).
+        if (PlayerAudioHub.Instance != null)
+            PlayerAudioHub.Instance.PlayLibrary(lib => lib.inventoryOpen != null ? lib.inventoryOpen : lib.uiSelect);
+        else if (openSound != null && audioSource != null)
             audioSource.PlayOneShot(openSound);
-        }
 
-        if (blurController != null)
-        {
-            blurController.EnableBlur();
-        }
-
+        // Dark overlay only — Global Volume owns depth of field.
         if (darkBackground != null)
         {
             if (backgroundFadeCoroutine != null)
@@ -103,16 +108,13 @@ public class InventoryManager : MonoBehaviour
         inventoryMenu.SetActive(false);
         menuActivated = false;
 
-        if (closeSound != null)
-        {
+        // Single close SFX — prefer hub, else local clip (never both).
+        if (PlayerAudioHub.Instance != null)
+            PlayerAudioHub.Instance.PlayLibrary(lib => lib.inventoryClose != null ? lib.inventoryClose : lib.uiHover);
+        else if (closeSound != null && audioSource != null)
             audioSource.PlayOneShot(closeSound);
-        }
 
-        if (blurController != null)
-        {
-            blurController.DisableBlur();
-        }
-
+        // Dark overlay only — Global Volume owns depth of field.
         if (darkBackground != null)
         {
             if (backgroundFadeCoroutine != null)
@@ -127,9 +129,13 @@ public class InventoryManager : MonoBehaviour
             StopCoroutine(bannerCoroutine);
             bannerCoroutine = null;
         }
-        itemBanner.SetActive(false);
-        itemBannerCanvasGroup.alpha = 0f;
-        itemBanner.transform.localScale = Vector3.zero;
+
+        if (itemBanner != null)
+            itemBanner.SetActive(false);
+        if (itemBannerCanvasGroup != null)
+            itemBannerCanvasGroup.alpha = 0f;
+        if (itemBanner != null)
+            itemBanner.transform.localScale = Vector3.zero;
     }
 
 

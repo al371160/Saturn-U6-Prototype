@@ -19,6 +19,7 @@ MonoBehaviour:
   meleePattern: 0
   weaponColor: {r: 0.6, g: 0.6, b: 0.65, a: 1}
   icon: {fileID: 21300000, guid: a76a158942b584ef7b832374f11ef114, type: 3}
+  rarity: 1
   hitRadius: 0.35
   isManualWeapon: 0
   element: 0
@@ -54,4 +55,4 @@ MonoBehaviour:
     range: 11
     count: 3
     secondaryValue: 0
-  evolvesInto: {fileID: 0}
+  evolutionOptions: []

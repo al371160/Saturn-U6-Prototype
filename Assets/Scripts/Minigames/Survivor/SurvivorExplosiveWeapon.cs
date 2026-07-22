@@ -29,24 +29,21 @@ public class SurvivorExplosiveWeapon : SurvivorWeaponBehavior
             return;
 
         fireTimer = Mathf.Max(0.3f, rateMultiplier > 0f ? stats.rate / rateMultiplier : stats.rate);
+        PlayFireSfx();
         Fire(stats);
     }
 
     private void Fire(SurvivorWeaponStarStats stats)
     {
         Transform target = FindNearestTarget();
-        Vector3 direction = target != null ? (target.position - transform.position) : transform.forward;
-        direction.y = 0f;
-        if (direction.sqrMagnitude < 0.01f)
-            direction = transform.forward;
-        direction.Normalize();
+        Vector3 direction = ResolveFlatAimDirection(target);
 
         float damageMultiplier = controller.WeaponManager != null ? controller.WeaponManager.DamageMultiplier : 1f;
         float rangeMultiplier = controller.WeaponManager != null ? controller.WeaponManager.RangeMultiplier : 1f;
 
         GameObject projectileObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         projectileObject.name = "SurvivorExplosiveShell";
-        projectileObject.transform.position = transform.position + Vector3.up * 0.6f;
+        projectileObject.transform.position = GetProjectileSpawnPosition();
         projectileObject.transform.localScale = Vector3.one * data.hitRadius * 1.8f;
 
         Collider col = projectileObject.GetComponent<Collider>();
@@ -107,6 +104,7 @@ public class SurvivorExplosiveShell : MonoBehaviour
     private float knockbackForce;
     private float lifetime = 3f;
     private bool exploded;
+    private float hitRadius = 0.25f;
 
     public void Launch(Vector3 travelDirection, float travelSpeed, float hitDamage, float radius, SurvivorElementType hitElement, float force)
     {
@@ -116,20 +114,34 @@ public class SurvivorExplosiveShell : MonoBehaviour
         blastRadius = radius;
         element = hitElement;
         knockbackForce = force;
+        hitRadius = Mathf.Max(0.2f, transform.localScale.x * 0.5f);
     }
 
     private void Update()
     {
-        transform.position += direction * (speed * Time.deltaTime);
+        if (exploded)
+            return;
+
+        float step = speed * Time.deltaTime;
+        Vector3 start = transform.position;
+
+        if (Physics.SphereCast(start, hitRadius, direction, out RaycastHit sweepHit, step, ~0, QueryTriggerInteraction.Collide)
+            && sweepHit.collider.GetComponentInParent<ISurvivorDamageable>() != null)
+        {
+            Explode();
+            return;
+        }
+
+        transform.position = start + direction * step;
+
+        if (SurvivorWeaponBehavior.TryGetDamageableHit(transform.position, hitRadius, out _))
+        {
+            Explode();
+            return;
+        }
 
         lifetime -= Time.deltaTime;
         if (lifetime <= 0f)
-            Explode();
-    }
-
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.GetComponent<ISurvivorDamageable>() != null)
             Explode();
     }
 
@@ -144,7 +156,7 @@ public class SurvivorExplosiveShell : MonoBehaviour
         for (int i = 0; i < hits.Length; i++)
         {
             GameObject hitObject = hits[i].gameObject;
-            if (hitObject.GetComponent<ISurvivorDamageable>() == null)
+            if (hitObject.GetComponentInParent<ISurvivorDamageable>() == null)
                 continue;
 
             Vector3 knockbackDir = (hitObject.transform.position - transform.position).normalized;

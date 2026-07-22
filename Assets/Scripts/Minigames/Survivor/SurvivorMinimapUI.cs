@@ -188,9 +188,8 @@ public class SurvivorMinimapUI : MonoBehaviour
             TextMeshProUGUI label = labelObject.AddComponent<TextMeshProUGUI>();
             label.alignment = TextAlignmentOptions.Center;
             label.fontSize = 12f;
-            label.color = Color.white;
-            if (font != null)
-                label.font = font;
+            SurvivorUiStyle.ApplyFont(label, font);
+            SurvivorUiStyle.ApplyTextOnDark(label);
             RectTransform labelRect = labelObject.GetComponent<RectTransform>();
             labelRect.anchorMin = new Vector2(0.5f, 0f);
             labelRect.anchorMax = new Vector2(0.5f, 0f);
@@ -220,7 +219,7 @@ public class SurvivorMinimapUI : MonoBehaviour
         GameObject radarObject = new GameObject("Radar");
         radarObject.transform.SetParent(canvasObject.transform, false);
         Image radarBg = radarObject.AddComponent<Image>();
-        radarBg.color = new Color(0.05f, 0.06f, 0.08f, 0.75f);
+        radarBg.color = SurvivorUiStyle.DarkPanel;
         radarPanel = radarObject.GetComponent<RectTransform>();
         radarPanel.anchorMin = new Vector2(1f, 1f);
         radarPanel.anchorMax = new Vector2(1f, 1f);
@@ -236,9 +235,8 @@ public class SurvivorMinimapUI : MonoBehaviour
         hint.text = "[M]";
         hint.alignment = TextAlignmentOptions.Center;
         hint.fontSize = 11f;
-        hint.color = new Color(1f, 1f, 1f, 0.5f);
-        if (font != null)
-            hint.font = font;
+        SurvivorUiStyle.ApplyFont(hint, font);
+        SurvivorUiStyle.ApplyTextOnDark(hint, muted: true);
         RectTransform hintRect = hintObject.GetComponent<RectTransform>();
         hintRect.anchorMin = new Vector2(0.5f, 0f);
         hintRect.anchorMax = new Vector2(0.5f, 0f);
@@ -250,7 +248,7 @@ public class SurvivorMinimapUI : MonoBehaviour
         GameObject expandedObject = new GameObject("ExpandedMap");
         expandedObject.transform.SetParent(canvasObject.transform, false);
         Image expandedBg = expandedObject.AddComponent<Image>();
-        expandedBg.color = new Color(0.04f, 0.05f, 0.07f, 0.92f);
+        expandedBg.color = SurvivorUiStyle.DarkPanel;
         expandedPanel = expandedObject.GetComponent<RectTransform>();
         expandedPanel.anchorMin = new Vector2(0.5f, 0.5f);
         expandedPanel.anchorMax = new Vector2(0.5f, 0.5f);

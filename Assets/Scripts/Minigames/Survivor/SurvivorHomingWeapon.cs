@@ -38,18 +38,32 @@ public class SurvivorHomingWeapon : SurvivorWeaponBehavior
         float rangeMultiplier = controller.WeaponManager != null ? controller.WeaponManager.RangeMultiplier : 1f;
         int shots = Mathf.Max(1, stats.count);
 
+        bool cursorAim = HasCursorAim(out Vector3 cursorDir);
+        bool anySpawned = false;
+
         for (int i = 0; i < shots; i++)
         {
-            Transform target = FindNearestTarget();
-            SpawnMissile(target, stats.damage * damageMultiplier, stats.range * rangeMultiplier);
+            Transform target = cursorAim ? null : FindNearestTarget();
+            if (!cursorAim && target == null)
+                continue;
+
+            Vector3 initialDirection = cursorAim
+                ? cursorDir
+                : ResolveFlatAimDirection(target);
+
+            anySpawned = true;
+            SpawnMissile(target, initialDirection, stats.damage * damageMultiplier, stats.range * rangeMultiplier);
         }
+
+        if (anySpawned)
+            PlayFireSfx();
     }
 
-    private void SpawnMissile(Transform target, float damage, float speed)
+    private void SpawnMissile(Transform target, Vector3 initialDirection, float damage, float speed)
     {
         GameObject missileObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         missileObject.name = "SurvivorHomingMissile";
-        missileObject.transform.position = transform.position + Vector3.up * 0.6f;
+        missileObject.transform.position = GetProjectileSpawnPosition();
         missileObject.transform.localScale = Vector3.one * data.hitRadius * 1.5f;
 
         Collider col = missileObject.GetComponent<Collider>();
@@ -64,7 +78,7 @@ public class SurvivorHomingWeapon : SurvivorWeaponBehavior
         if (renderer != null)
             renderer.material.color = data.weaponColor;
 
-        missileObject.AddComponent<SurvivorHomingMissile>().Launch(target, transform.forward, speed, damage, data.element, data.knockbackForce);
+        missileObject.AddComponent<SurvivorHomingMissile>().Launch(target, initialDirection, speed, damage, data.element, data.knockbackForce);
     }
 
     private Transform FindNearestTarget()
@@ -108,16 +122,23 @@ public class SurvivorHomingMissile : MonoBehaviour
     private SurvivorElementType element;
     private float knockbackForce;
     private float lifetime = 4f;
+    private float hitRadius = 0.2f;
     private const float TurnRateDegreesPerSecond = 260f;
 
     public void Launch(Transform homingTarget, Vector3 initialDirection, float travelSpeed, float hitDamage, SurvivorElementType hitElement, float force)
     {
         target = homingTarget;
         fallbackDirection = initialDirection.sqrMagnitude > 0.01f ? initialDirection.normalized : Vector3.forward;
+        fallbackDirection.y = 0f;
+        if (fallbackDirection.sqrMagnitude < 0.01f)
+            fallbackDirection = Vector3.forward;
+        fallbackDirection.Normalize();
+
         speed = travelSpeed;
         damage = hitDamage;
         element = hitElement;
         knockbackForce = force;
+        hitRadius = Mathf.Max(0.15f, transform.localScale.x * 0.5f);
         transform.rotation = Quaternion.LookRotation(fallbackDirection);
     }
 
@@ -130,24 +151,45 @@ public class SurvivorHomingMissile : MonoBehaviour
             return;
         }
 
-        Vector3 desiredDirection = target != null
-            ? (target.position - transform.position).normalized
-            : transform.forward;
+        Vector3 desiredDirection = fallbackDirection;
+        if (target != null)
+        {
+            desiredDirection = target.position - transform.position;
+            desiredDirection.y = 0f;
+            if (desiredDirection.sqrMagnitude > 0.01f)
+                desiredDirection.Normalize();
+            else
+                desiredDirection = transform.forward;
+        }
 
         transform.rotation = Quaternion.RotateTowards(
             transform.rotation,
             Quaternion.LookRotation(desiredDirection),
             TurnRateDegreesPerSecond * Time.deltaTime);
 
-        transform.position += transform.forward * (speed * Time.deltaTime);
+        float step = speed * Time.deltaTime;
+        Vector3 moveDir = transform.forward;
+        moveDir.y = 0f;
+        if (moveDir.sqrMagnitude < 0.01f)
+            moveDir = fallbackDirection;
+        moveDir.Normalize();
+
+        if (Physics.SphereCast(transform.position, hitRadius, moveDir, out RaycastHit sweepHit, step, ~0, QueryTriggerInteraction.Collide)
+            && sweepHit.collider.GetComponentInParent<ISurvivorDamageable>() != null)
+        {
+            ApplyHit(sweepHit.collider.gameObject, moveDir);
+            return;
+        }
+
+        transform.position += moveDir * step;
+
+        if (SurvivorWeaponBehavior.TryGetDamageableHit(transform.position, hitRadius, out Collider overlapHit))
+            ApplyHit(overlapHit.gameObject, moveDir);
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void ApplyHit(GameObject hitObject, Vector3 hitDirection)
     {
-        if (other.GetComponent<ISurvivorDamageable>() == null)
-            return;
-
-        SurvivorCombatFX.ApplyHit(other.gameObject, damage, element, transform.forward, knockbackForce);
+        SurvivorCombatFX.ApplyHit(hitObject, damage, element, hitDirection, knockbackForce);
         Destroy(gameObject);
     }
 }

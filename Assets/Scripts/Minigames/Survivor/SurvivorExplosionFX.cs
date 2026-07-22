@@ -27,16 +27,8 @@ public static class SurvivorExplosionFX
     private static void BuildFlash(Transform parent, Color tint)
     {
         ParticleSystem ps = CreateSystem(parent, "Flash");
-        var main = ps.main;
-        main.duration = 0.2f;
-        main.loop = false;
-        main.startLifetime = 0.12f;
-        main.startSpeed = 0f;
-        main.startSize = new ParticleSystem.MinMaxCurve(1.8f, 2.6f);
-        main.startColor = new Color(1f, 1f, 0.85f, 0.95f);
-        main.gravityModifier = 0f;
-        main.simulationSpace = ParticleSystemSimulationSpace.World;
-        main.stopAction = ParticleSystemStopAction.None;
+        ConfigureMain(ps, duration: 0.2f, lifetime: 0.12f, speed: 0f, size: new ParticleSystem.MinMaxCurve(1.8f, 2.6f),
+            color: new Color(1f, 1f, 0.85f, 0.95f), gravity: 0f, space: ParticleSystemSimulationSpace.World);
 
         var emission = ps.emission;
         emission.rateOverTime = 0f;
@@ -64,21 +56,16 @@ public static class SurvivorExplosionFX
         size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 0.4f, 1f, 1.4f));
 
         SetAdditive(ps);
-        ps.Play(true);
+        FinishAndPlay(ps);
     }
 
     private static void BuildRing(Transform parent, Color tint)
     {
         ParticleSystem ps = CreateSystem(parent, "Ring");
+        ConfigureMain(ps, duration: 0.35f, lifetime: 0.28f, speed: 6f, size: new ParticleSystem.MinMaxCurve(0.15f, 0.35f),
+            color: new Color(tint.r, tint.g, tint.b, 0.85f), gravity: 0f, space: ParticleSystemSimulationSpace.Local);
+
         var main = ps.main;
-        main.duration = 0.35f;
-        main.loop = false;
-        main.startLifetime = 0.28f;
-        main.startSpeed = 6f;
-        main.startSize = new ParticleSystem.MinMaxCurve(0.15f, 0.35f);
-        main.startColor = new Color(tint.r, tint.g, tint.b, 0.85f);
-        main.gravityModifier = 0f;
-        main.simulationSpace = ParticleSystemSimulationSpace.Local;
         main.startRotation3D = true;
 
         var emission = ps.emission;
@@ -104,21 +91,15 @@ public static class SurvivorExplosionFX
         size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 1f, 1f, 0.1f));
 
         SetAdditive(ps);
-        ps.Play(true);
+        FinishAndPlay(ps);
     }
 
     private static void BuildSparks(Transform parent, Color tint)
     {
         ParticleSystem ps = CreateSystem(parent, "Sparks");
-        var main = ps.main;
-        main.duration = 0.5f;
-        main.loop = false;
-        main.startLifetime = new ParticleSystem.MinMaxCurve(0.2f, 0.45f);
-        main.startSpeed = new ParticleSystem.MinMaxCurve(6f, 14f);
-        main.startSize = new ParticleSystem.MinMaxCurve(0.06f, 0.14f);
-        main.startColor = new Color(1f, 0.85f, 0.35f, 1f);
-        main.gravityModifier = 0.6f;
-        main.simulationSpace = ParticleSystemSimulationSpace.World;
+        ConfigureMain(ps, duration: 0.5f, lifetime: new ParticleSystem.MinMaxCurve(0.2f, 0.45f),
+            speed: new ParticleSystem.MinMaxCurve(6f, 14f), size: new ParticleSystem.MinMaxCurve(0.06f, 0.14f),
+            color: new Color(1f, 0.85f, 0.35f, 1f), gravity: 0.6f, space: ParticleSystemSimulationSpace.World);
 
         var emission = ps.emission;
         emission.rateOverTime = 0f;
@@ -149,23 +130,17 @@ public static class SurvivorExplosionFX
         trails.widthOverTrail = 0.4f;
 
         SetAdditive(ps);
-        ps.Play(true);
+        FinishAndPlay(ps);
     }
 
     private static void BuildSmoke(Transform parent, Color tint)
     {
         ParticleSystem ps = CreateSystem(parent, "Smoke");
-        var main = ps.main;
-        main.duration = 0.8f;
-        main.loop = false;
-        main.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 0.9f);
-        main.startSpeed = new ParticleSystem.MinMaxCurve(1.2f, 2.5f);
-        main.startSize = new ParticleSystem.MinMaxCurve(0.6f, 1.2f);
         Color smoke = Color.Lerp(tint, new Color(0.35f, 0.2f, 0.45f), 0.45f);
         smoke.a = 0.55f;
-        main.startColor = smoke;
-        main.gravityModifier = -0.15f;
-        main.simulationSpace = ParticleSystemSimulationSpace.World;
+        ConfigureMain(ps, duration: 0.8f, lifetime: new ParticleSystem.MinMaxCurve(0.5f, 0.9f),
+            speed: new ParticleSystem.MinMaxCurve(1.2f, 2.5f), size: new ParticleSystem.MinMaxCurve(0.6f, 1.2f),
+            color: smoke, gravity: -0.15f, space: ParticleSystemSimulationSpace.World);
 
         var emission = ps.emission;
         emission.rateOverTime = 0f;
@@ -188,14 +163,60 @@ public static class SurvivorExplosionFX
         size.enabled = true;
         size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 0.5f, 1f, 1.8f));
 
-        ps.Play(true);
+        FinishAndPlay(ps);
     }
 
     private static ParticleSystem CreateSystem(Transform parent, string name)
     {
+        // Keep inactive while authoring — AddComponent otherwise auto-plays and blocks duration edits.
         GameObject go = new GameObject(name);
         go.transform.SetParent(parent, false);
-        return go.AddComponent<ParticleSystem>();
+        go.SetActive(false);
+        ParticleSystem ps = go.AddComponent<ParticleSystem>();
+        ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        return ps;
+    }
+
+    private static void ConfigureMain(
+        ParticleSystem ps,
+        float duration,
+        ParticleSystem.MinMaxCurve lifetime,
+        ParticleSystem.MinMaxCurve speed,
+        ParticleSystem.MinMaxCurve size,
+        Color color,
+        float gravity,
+        ParticleSystemSimulationSpace space)
+    {
+        var main = ps.main;
+        main.playOnAwake = false;
+        main.loop = false;
+        main.duration = duration;
+        main.startLifetime = lifetime;
+        main.startSpeed = speed;
+        main.startSize = size;
+        main.startColor = color;
+        main.gravityModifier = gravity;
+        main.simulationSpace = space;
+        main.stopAction = ParticleSystemStopAction.None;
+    }
+
+    private static void ConfigureMain(
+        ParticleSystem ps,
+        float duration,
+        float lifetime,
+        float speed,
+        ParticleSystem.MinMaxCurve size,
+        Color color,
+        float gravity,
+        ParticleSystemSimulationSpace space)
+    {
+        ConfigureMain(ps, duration, new ParticleSystem.MinMaxCurve(lifetime), new ParticleSystem.MinMaxCurve(speed), size, color, gravity, space);
+    }
+
+    private static void FinishAndPlay(ParticleSystem ps)
+    {
+        ps.gameObject.SetActive(true);
+        ps.Play(true);
     }
 
     private static void SetAdditive(ParticleSystem ps)
@@ -212,7 +233,7 @@ public static class SurvivorExplosionFX
 
         Material mat = new Material(shader);
         if (mat.HasProperty("_Mode"))
-            mat.SetFloat("_Mode", 1f); // Additive-ish when supported
+            mat.SetFloat("_Mode", 1f);
         if (mat.HasProperty("_Color"))
             mat.SetColor("_Color", Color.white);
         renderer.material = mat;

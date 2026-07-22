@@ -1,23 +1,22 @@
 using UnityEngine;
 
 /// <summary>
-/// Breakable loot box: shrinks as it takes damage, shatters at 0 HP, drops a weapon or buff pickup.
-/// Spawns at predetermined map areas — not relative to the player.
+/// Breakable loot box: visual shrinks as it takes damage, shatters at 0 HP, drops a weapon or buff.
+/// Root collider stays full-size so player weapons keep connecting.
 /// </summary>
 [RequireComponent(typeof(Collider))]
 public class SurvivorLootCrate : MonoBehaviour, ISurvivorDamageable
 {
+    public const float CrateWorldSize = 1.1f;
+
     private SurvivorMinigameController controller;
     private Transform playerTarget;
     private SurvivorWeaponDataSO[] weaponPool;
     private SurvivorBuffDataSO[] buffPool;
     private float maxHealth = 50f;
     private float health;
-    private Vector3 baseScale = Vector3.one * 1.6f;
     private GameObject visual;
     private Renderer visualRenderer;
-
-    [Tooltip("0–1 chance the drop is a weapon (rest are buffs).")]
     private float weaponDropChance = 0.65f;
 
     public void Initialize(
@@ -35,8 +34,10 @@ public class SurvivorLootCrate : MonoBehaviour, ISurvivorDamageable
         maxHealth = Mathf.Max(1f, structureHealth);
         health = maxHealth;
         weaponDropChance = Mathf.Clamp01(weaponChance);
+
+        transform.localScale = Vector3.one;
         BuildVisual();
-        UpdateScale();
+        UpdateVisual();
     }
 
     private void BuildVisual()
@@ -44,32 +45,44 @@ public class SurvivorLootCrate : MonoBehaviour, ISurvivorDamageable
         visual = GameObject.CreatePrimitive(PrimitiveType.Cube);
         visual.name = "LootCrateVisual";
         visual.transform.SetParent(transform, false);
-        visual.transform.localScale = Vector3.one;
+        visual.transform.localPosition = Vector3.zero;
+        visual.transform.localScale = Vector3.one * CrateWorldSize;
         Object.Destroy(visual.GetComponent<Collider>());
 
         visualRenderer = visual.GetComponent<Renderer>();
         if (visualRenderer != null)
             visualRenderer.material.color = new Color(0.55f, 0.38f, 0.18f);
+
+        BoxCollider box = GetComponent<BoxCollider>();
+        if (box != null)
+        {
+            box.size = Vector3.one * CrateWorldSize;
+            box.center = Vector3.zero;
+        }
     }
 
     public void TakeDamage(float amount)
     {
         health -= amount;
-        UpdateScale();
+        UpdateVisual();
+        // Hit SFX is played by SurvivorCombatFX.ApplyHit → PlayHitForTarget (avoids double-play).
 
         if (health <= 0f)
             Shatter();
     }
 
-    private void UpdateScale()
+    private void UpdateVisual()
     {
         float t = Mathf.Clamp01(health / maxHealth);
-        float scaleMul = Mathf.Lerp(0.35f, 1f, t);
-        transform.localScale = baseScale * scaleMul;
+        // Mild shrink with damage — keep most of the silhouette readable.
+        float scaleMul = Mathf.Lerp(0.78f, 1f, t);
+
+        if (visual != null)
+            visual.transform.localScale = Vector3.one * (CrateWorldSize * scaleMul);
 
         if (visualRenderer != null)
         {
-            Color c = Color.Lerp(new Color(0.9f, 0.35f, 0.15f), new Color(0.55f, 0.38f, 0.18f), t);
+            Color c = Color.Lerp(new Color(1f, 0.35f, 0.15f), new Color(0.55f, 0.38f, 0.18f), t);
             visualRenderer.material.color = c;
         }
     }
@@ -78,6 +91,7 @@ public class SurvivorLootCrate : MonoBehaviour, ISurvivorDamageable
     {
         Color tint = visualRenderer != null ? visualRenderer.material.color : new Color(0.7f, 0.4f, 0.2f);
         SurvivorExplosionFX.Play(transform.position, 2.2f, tint);
+        SurvivorAudio.PlayDestroyForTarget(SurvivorHitAudioKind.Crate);
         SpawnDrop();
         Destroy(gameObject);
     }
@@ -87,16 +101,12 @@ public class SurvivorLootCrate : MonoBehaviour, ISurvivorDamageable
         bool dropWeapon = weaponPool != null && weaponPool.Length > 0 && Random.value <= weaponDropChance;
         if (dropWeapon)
         {
-            SurvivorWeaponDataSO weapon = weaponPool[Random.Range(0, weaponPool.Length)];
+            SurvivorWeaponDataSO weapon = SurvivorLootRarity.PickWeightedWeapon(weaponPool);
             if (weapon == null)
                 return;
 
-            GameObject pickupObject = new GameObject("SurvivorWeaponPickup");
-            pickupObject.transform.position = transform.position + Vector3.up * 0.6f;
-            SphereCollider col = pickupObject.AddComponent<SphereCollider>();
-            col.isTrigger = true;
-            col.radius = 0.45f;
-            pickupObject.AddComponent<SurvivorWeaponPickup>().Initialize(controller, playerTarget, weapon);
+            int startStar = SurvivorLootRarity.RollStartStar(weapon);
+            SpawnWeaponPickup(weapon, startStar, transform.position + Vector3.up * 0.5f);
             return;
         }
 
@@ -108,7 +118,7 @@ public class SurvivorLootCrate : MonoBehaviour, ISurvivorDamageable
             return;
 
         GameObject buffPickup = new GameObject("ScopePickup");
-        buffPickup.transform.position = transform.position + Vector3.up * 0.8f;
+        buffPickup.transform.position = transform.position + Vector3.up * 0.6f;
         SphereCollider buffCol = buffPickup.AddComponent<SphereCollider>();
         buffCol.isTrigger = true;
         buffCol.radius = 0.4f;
@@ -122,5 +132,15 @@ public class SurvivorLootCrate : MonoBehaviour, ISurvivorDamageable
             r.material.color = buff.iconColor;
 
         buffPickup.AddComponent<SurvivorScopePickup>().Initialize(controller, playerTarget, buff, 6f);
+    }
+
+    private void SpawnWeaponPickup(SurvivorWeaponDataSO weapon, int startStar, Vector3 position)
+    {
+        GameObject pickupObject = new GameObject("SurvivorWeaponPickup");
+        pickupObject.transform.position = position;
+        SphereCollider col = pickupObject.AddComponent<SphereCollider>();
+        col.isTrigger = true;
+        col.radius = 0.45f;
+        pickupObject.AddComponent<SurvivorWeaponPickup>().Initialize(controller, playerTarget, weapon, startStar);
     }
 }

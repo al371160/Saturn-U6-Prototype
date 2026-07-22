@@ -145,6 +145,15 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8
   groundSnapRayHeight: 50
+  forestTreePrefabs:
+  - {fileID: 8805828578124395387, guid: 4e8591459e1024b13a269d490b12acf3, type: 3}
+  - {fileID: 6108087870227408206, guid: fbb1a57af9ac844818993c3f06ae6190, type: 3}
+  - {fileID: 6713500557578927196, guid: 38d6243f6eb4e49509f05cc6de7a8b70, type: 3}
+  - {fileID: 1992430847268597472, guid: a2cb032d1ffac4265b772b61aaf6e46e, type: 3}
+  - {fileID: 7098742222159704740, guid: 4c0e0f01466f14da982cd73e561a7fbb, type: 3}
+  forestTreeCount: 100
+  forestMapHalfExtent: 220
+  forestMinSpacing: 7
   useBattleBusIntro: 1
   busPathHalfExtent: 350
   busFlightAltitude: 160

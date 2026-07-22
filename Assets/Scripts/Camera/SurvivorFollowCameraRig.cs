@@ -25,17 +25,20 @@ public class SurvivorFollowCameraRig : MonoBehaviour
     [Tooltip("Zoom multiplier forced during dialogue/sign interaction, bypassing whatever scope buff is active.")]
     public float interactionZoomMultiplier = 0.4f;
 
+    [Tooltip("Zoom forced while inside an enterable building (1 = default / 1x scope).")]
+    public float buildingInteriorZoomMultiplier = 1f;
+
     private float zoomMultiplier = 1f;
     private float targetZoomMultiplier = 1f;
     private float scopeZoomMultiplier = 1f;
     private bool interactionZoomActive;
+    private bool buildingInteriorZoomActive;
 
     /// <summary>Scopes/zoom items call this to pull the camera further back (>1) or push it in (<1).</summary>
     public void SetZoomMultiplier(float multiplier)
     {
         scopeZoomMultiplier = Mathf.Max(0.1f, multiplier);
-        if (!interactionZoomActive)
-            targetZoomMultiplier = scopeZoomMultiplier;
+        RefreshTargetZoom();
     }
 
     /// <summary>Dialogue/sign interaction calls this to force a close zoom regardless of the current
@@ -43,7 +46,24 @@ public class SurvivorFollowCameraRig : MonoBehaviour
     public void SetInteractionZoom(bool active)
     {
         interactionZoomActive = active;
-        targetZoomMultiplier = active ? interactionZoomMultiplier : scopeZoomMultiplier;
+        RefreshTargetZoom();
+    }
+
+    /// <summary>Enterable buildings force 1x zoom so interiors stay readable.</summary>
+    public void SetBuildingInteriorZoom(bool active)
+    {
+        buildingInteriorZoomActive = active;
+        RefreshTargetZoom();
+    }
+
+    private void RefreshTargetZoom()
+    {
+        if (interactionZoomActive)
+            targetZoomMultiplier = interactionZoomMultiplier;
+        else if (buildingInteriorZoomActive)
+            targetZoomMultiplier = buildingInteriorZoomMultiplier;
+        else
+            targetZoomMultiplier = scopeZoomMultiplier;
     }
 
     private void LateUpdate()

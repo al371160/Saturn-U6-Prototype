@@ -33,6 +33,7 @@ public class SurvivorLevelUpUI : MonoBehaviour
             spawnedButtons.Add(CreateChoiceButton(choices[i], i, choices.Count));
 
         canvas.gameObject.SetActive(true);
+        SurvivorAudio.PlayLevelUp();
     }
 
     public void Hide()
@@ -58,7 +59,6 @@ public class SurvivorLevelUpUI : MonoBehaviour
         buttonObject.transform.SetParent(choiceRoot, false);
 
         Image background = buttonObject.AddComponent<Image>();
-        background.color = new Color(0.08f, 0.09f, 0.12f, 0.92f);
 
         Button button = buttonObject.AddComponent<Button>();
 
@@ -93,7 +93,6 @@ public class SurvivorLevelUpUI : MonoBehaviour
         title.text = choice.Title;
         title.alignment = TextAlignmentOptions.Center;
         title.fontStyle = FontStyles.Bold;
-        title.color = new Color(0.95f, 0.97f, 1f);
         ConfigureLabel(title, font, 14f, 22f);
         RectTransform titleRect = titleObject.GetComponent<RectTransform>();
         titleRect.anchorMin = new Vector2(0f, 1f);
@@ -107,8 +106,8 @@ public class SurvivorLevelUpUI : MonoBehaviour
         TextMeshProUGUI description = descriptionObject.AddComponent<TextMeshProUGUI>();
         description.text = choice.Description;
         description.alignment = TextAlignmentOptions.Top;
-        description.color = new Color(0.85f, 0.88f, 0.95f);
         ConfigureLabel(description, font, 10f, 16f);
+        SurvivorUiStyle.ApplyDarkCard(background, title, description);
         RectTransform descriptionRect = descriptionObject.GetComponent<RectTransform>();
         descriptionRect.anchorMin = Vector2.zero;
         descriptionRect.anchorMax = Vector2.one;
@@ -134,6 +133,7 @@ public class SurvivorLevelUpUI : MonoBehaviour
 
     private void OnChoiceSelected(SurvivorUpgradeChoice choice)
     {
+        SurvivorAudio.PlayUiSelect();
         choice.Apply?.Invoke(controller);
         Hide();
         controller.ResumeAfterUpgrade();
@@ -165,9 +165,8 @@ public class SurvivorLevelUpUI : MonoBehaviour
         titleText.text = "LEVEL UP! Choose an upgrade";
         titleText.alignment = TextAlignmentOptions.Center;
         titleText.fontSize = 36;
-        titleText.color = Color.white;
-        if (font != null)
-            titleText.font = font;
+        SurvivorUiStyle.ApplyFont(titleText, font);
+        SurvivorUiStyle.ApplyTextOnDark(titleText);
 
         RectTransform titleRect = titleObject.GetComponent<RectTransform>();
         titleRect.anchorMin = new Vector2(0.5f, 1f);

@@ -22,8 +22,6 @@ public class ItemSO : ScriptableObject
     [Header("Suit Stats")]
     [Tooltip("Only relevant when StatToChange is suitEquip.")]
     public float suitMaxWeight = 10f;
-    [Tooltip("Effective altitude bonus in units — shifts when oxygen drain begins.")]
-    public float suitMaxAltitude = 50f;
     public float suitMaxSpeed = 8f;
 
     [Header("Minigame Settings")]

@@ -338,6 +338,15 @@ public static class SurvivorStructurePrefabBuilder
             : GetOrCreateMat(parent.root.name + "_" + name + "_mat", color);
 
         part.GetComponent<MeshRenderer>().sharedMaterial = mat;
+
+        // Walkable platforms/floors need Ground layer so freefall/glide doesn't unlock while standing on them.
+        string lower = name.ToLowerInvariant();
+        if (lower.Contains("floor") || lower.Contains("platform") || lower.Contains("deck") || lower.Contains("dock") || lower.Contains("bridge") || lower == "road")
+        {
+            int groundLayer = LayerMask.NameToLayer("Ground");
+            if (groundLayer >= 0)
+                part.layer = groundLayer;
+        }
     }
 
     private static Material GetOrCreateMat(string matName, Color color)

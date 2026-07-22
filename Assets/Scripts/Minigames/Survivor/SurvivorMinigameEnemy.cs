@@ -278,6 +278,7 @@ public class SurvivorMinigameEnemy : MonoBehaviour, ISurvivorDamageable, ISurviv
 
     private void Die()
     {
+        SurvivorAudio.PlayDestroyForTarget(IsElite ? SurvivorHitAudioKind.Elite : SurvivorHitAudioKind.Enemy);
         int bonusXP = controller?.MinigamePlayer != null ? controller.MinigamePlayer.BonusXPPerKill : 0;
         controller?.SpawnXPGem(transform.position, xpReward + bonusXP);
         controller?.RegisterKill();

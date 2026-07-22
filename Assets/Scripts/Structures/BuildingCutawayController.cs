@@ -29,6 +29,9 @@ public class BuildingCutawayController : MonoBehaviour
         if (fadeRenderers == null || fadeRenderers.Count == 0)
             AutoCollectFadeRenderers();
 
+        BuildingWindowUtility.EnsureWindows(this);
+        AutoCollectFadeRenderers();
+
         targetFade = outsideFade;
         currentFade = outsideFade;
         ApplyFade(currentFade);

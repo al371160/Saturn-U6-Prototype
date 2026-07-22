@@ -35,6 +35,7 @@ public class SurvivorScopePickup : MonoBehaviour
         if (sqrDistance <= CollectDistance * CollectDistance)
         {
             scopeBuff?.Apply(controller);
+            SurvivorAudio.PlayBuffPickup();
             Destroy(gameObject);
             return;
         }

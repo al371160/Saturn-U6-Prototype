@@ -106,6 +106,9 @@ public class SurvivorDroneCompanion : MonoBehaviour
         if (fireTimer > 0f)
             return;
 
+        if (!owner.AllowsFiring)
+            return;
+
         fireTimer = Mathf.Max(0.3f, rateMultiplier > 0f ? stats.rate / rateMultiplier : stats.rate);
         FireAtNearestEnemy(stats);
     }
@@ -115,6 +118,8 @@ public class SurvivorDroneCompanion : MonoBehaviour
         Transform target = FindNearestTarget();
         if (target == null)
             return;
+
+        SurvivorAudio.PlayWeaponFire(owner.WeaponData);
 
         Vector3 direction = (target.position - transform.position).normalized;
         SurvivorWeaponDataSO weaponData = owner.WeaponData;

@@ -153,6 +153,7 @@ public class SurvivorMinigamePlayer : MonoBehaviour
 
         contactCooldown = config.contactDamageCooldown;
         currentHealth -= amount * (1f - DamageReductionPercent);
+        SurvivorAudio.PlayPlayerHurt();
         controller.RefreshHud();
 
         if (currentHealth <= 0f)

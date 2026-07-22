@@ -43,14 +43,12 @@ public class SurvivorHitscanWeapon : SurvivorWeaponBehavior
     private void FireVolley(SurvivorWeaponStarStats stats)
     {
         Transform target = FindNearestTarget();
-        if (target == null)
+        if (!HasAimSolution(target))
             return;
 
-        Vector3 baseDirection = target.position - transform.position;
-        baseDirection.y = 0f;
-        if (baseDirection.sqrMagnitude < 0.01f)
-            baseDirection = transform.forward;
-        baseDirection.Normalize();
+        PlayFireSfx();
+
+        Vector3 baseDirection = ResolveFlatAimDirection(target);
 
         int pellets = Mathf.Max(1, stats.count);
         float spreadStep = pellets > 1 ? ShotgunSpreadDegrees / (pellets - 1) : 0f;
@@ -74,7 +72,7 @@ public class SurvivorHitscanWeapon : SurvivorWeaponBehavior
 
     private void FireRay(Vector3 direction, float damage, float maxDistance, int pierceCount)
     {
-        Vector3 origin = transform.position + Vector3.up * 0.6f;
+        Vector3 origin = GetProjectileSpawnPosition();
         int hitCount = Physics.RaycastNonAlloc(origin, direction, rayHits, maxDistance);
         System.Array.Sort(rayHits, 0, hitCount, DistanceComparer.Instance);
 
@@ -82,7 +80,7 @@ public class SurvivorHitscanWeapon : SurvivorWeaponBehavior
         for (int i = 0; i < hitCount && applied < pierceCount; i++)
         {
             GameObject hitObject = rayHits[i].collider.gameObject;
-            if (hitObject.GetComponent<ISurvivorDamageable>() == null)
+            if (hitObject.GetComponentInParent<ISurvivorDamageable>() == null)
                 continue;
 
             SurvivorCombatFX.ApplyHit(hitObject, damage, data.element, direction, data.knockbackForce);

@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// Trigger volume for enterable buildings. Notifies BuildingCutawayController when the local
-/// player enters/exits so roof/walls can fade for that client only.
+/// player enters/exits so roof/walls can fade for that client only, and forces camera zoom to 1x.
 /// </summary>
 [RequireComponent(typeof(Collider))]
 public class BuildingInteriorZone : MonoBehaviour
@@ -32,6 +32,7 @@ public class BuildingInteriorZone : MonoBehaviour
             return;
 
         cutaway?.NotifyLocalPlayerEntered();
+        SetBuildingCameraZoom(true);
     }
 
     private void OnTriggerExit(Collider other)
@@ -40,6 +41,14 @@ public class BuildingInteriorZone : MonoBehaviour
             return;
 
         cutaway?.NotifyLocalPlayerExited();
+        SetBuildingCameraZoom(false);
+    }
+
+    private static void SetBuildingCameraZoom(bool inside)
+    {
+        SurvivorFollowCameraRig[] rigs = Object.FindObjectsByType<SurvivorFollowCameraRig>(FindObjectsSortMode.None);
+        for (int i = 0; i < rigs.Length; i++)
+            rigs[i]?.SetBuildingInteriorZoom(inside);
     }
 
     private static bool IsLocalPlayer(Collider other)
